@@ -1,3 +1,5 @@
 include/
 main.sym
-clsp.hex
+*.clsp.hex
+private-notes.md
+*.pyc

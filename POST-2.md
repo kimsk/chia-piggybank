@@ -106,13 +106,13 @@ To contribute to the piggybank coin, we will create a spend bundle with two coin
 }
 ```
 
-To [spend a coin](https://chialisp.com/docs/coins_spends_and_wallets#spends), we also need to provide the full source of the coin's puzzle or **puzzle reveal** and **solution** to the puzzle. 
+To [spend a coin](https://chialisp.com/docs/coins_spends_and_wallets#spends), we also need to provide the full source of the coin's puzzle or `puzzle reveal` and `solution` to the puzzle. 
 
-Lastly, we will need to provide **aggregated signature** for the spend bundle. In this case, we don't output any condition that will assert the signature (more on that later in the security post), we can just use an empty signature below:
+Lastly, we will need to provide `aggregated signature` for the spend bundle. In this case, we don't output any condition that will assert the signature (more on that later in the security post), we can just use an empty signature below:
 
 `c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000`
 
-We can get the **puzzle reveal** from the `clsp.hex` file. And the **solution** via `opc` command.
+We can get the `puzzle reveal` from the `clsp.hex` file. And the `solution` via `opc` command.
 
 ```sh
 ❯ bat piggybank/piggybank.clsp.hex
@@ -199,11 +199,10 @@ None
 We don't see any error, so let's spend it! We push the spend bundle to the blockchain by using `cdv rpc pushtx`
 
 ```sh
-❯ cdv rpc pushtx ./spend_bundle-100.json
 {'status': 'SUCCESS', 'success': True}
 ```
 
-We should now see a new **100** mojos coin has been created on the block `527384`. And both **0** mojo piggybank coin and **contribution coin** have been spent on the same block, `527348`.
+We should now see a new **100** mojo coin has been created on the block `527384`. And both **0** mojo piggybank coin and **contribution coin** have been spent on the same block, `527348`.
 ```sh
 ❯ cdv rpc coinrecords --by puzhash 0xc23532ddfb0d78654cf73e9a1e5b417fc7cc110d40cb8c08198d6057064eb7f8
 
@@ -247,7 +246,7 @@ Let's create more contribution coins and try to contribute until the we reach th
 
 > You might need to wait until the first transaction is confirmed before sending money again otherwise you will get `"Can't send more than 0 in a single transaction"` exception.
 
-Wait a bit, and we should have our unspent **300** mojos and **200** mojos coins. Please note additional `-ou` flag to get only unspent coins.
+Wait a bit, and we should have our unspent **300** mojo and **200** mojo coins. Please note additional `-ou` flag to get only unspent coins.
 
 ```sh
 ❯ cdv rpc coinrecords -ou --by puzhash 0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a
@@ -269,7 +268,7 @@ Wait a bit, and we should have our unspent **300** mojos and **200** mojos coins
   'timestamp': 1630469816}]
 ```
 #### Contribute More Coins
-Now let's spend **200** mojos coin and check the unspent piggybank coin.
+Now let's spend **200** mojo coin and check the unspent piggybank coin.
 
 > As you can see, the spend bundles have to be updated with different coin infos (i.e., `amount` and `parent_coin_info`, and `solution`) each time. And since our current puzzle has no `assertion`, wrong `solution` can cause wrong result. This can be very cumbersome and error-prone, so that's why we should have `driver code` doing this instead.
 

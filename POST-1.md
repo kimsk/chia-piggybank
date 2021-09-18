@@ -43,14 +43,8 @@ Since we want `TARGET_AMOUNT` and `CASH_OUT_PUZZLE_HASH` to be the same for ever
 In Chia, the wallet address is the `bech32m` encoded puzzle hash. :exploding_head: Hence, we can get the `CASH_OUT_PUZZLE_HASH` by decoding the wallet address.
 
 ```sh
-❯ chia keys show
-Showing all public keys derived from your private keys:
-
-Fingerprint: 221573580
-Master public key (m): ...
-Farmer public key (m/12381/8444/0/0): ...
-Pool public key (m/12381/8444/1/0): ...
-First wallet address: txch156jw6dev0pvpd7ujldumjm7hl96csyvs0a6whcvfeye3pca638nquar63h
+❯ chia wallet get_address -f 221573580
+txch156jw6dev0pvpd7ujldumjm7hl96csyvs0a6whcvfeye3pca638nquar63h
 ```
 
 I am using `testnet7` and the wallet address is `txch156jw6dev0pvpd7ujldumjm7hl96csyvs0a6whcvfeye3pca638nquar63h`. We can use `cdv` to decode it to get the puzzle hash.
@@ -146,7 +140,7 @@ Now, let's test normal piggybank contribution. We should see a new piggybank coi
 ```
 > `(defconstant CREATE_COIN 51)` is defined in `include/condition_codes.clib`
 
-Finally, let's test piggybank cash out. We should see two coins created. The first one is the cash out coin which paid 501 mojos to the puzzle hash defined above. And the second one is the new piggybank coin with 0 mojo.
+Finally, let's test piggybank cash out. We should see two coins created. The first one is the cash out coin which paid 501 mojos to the puzzle hash defined above. And the second one is the new piggybank coin with **0** mojo.
 ```sh
 ❯ brun (cdv clsp disassemble piggybank/piggybank.clsp.hex) '(100 501 0xcafef00d)'
 ((51 0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6 501) (51 0xcafef00d ()))
@@ -194,7 +188,7 @@ We have been working locally so far. Next step is to deploy the smart coin to th
 
 ### Get the puzzle hash (i.e., treehash)
 
-Again, we can use `cdv` to get the `treehash` and encode it to a receive address.
+Again, we can use `cdv` to get the `treehash` and encode it to a received address.
 ```sh
 ❯ cdv clsp treehash ./piggybank/piggybank.clsp.hex
 c23532ddfb0d78654cf73e9a1e5b417fc7cc110d40cb8c08198d6057064eb7f8
