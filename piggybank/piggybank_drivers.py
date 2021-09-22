@@ -14,16 +14,18 @@ from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.bech32m import encode_puzzle_hash, decode_puzzle_hash
+from chia.util.clvm import int_to_bytes
 from chia.util.config import load_config
 from chia.util.default_root import DEFAULT_ROOT_PATH
+from chia.util.hash import std_hash
 from chia.util.ints import uint16, uint64
 from chia.wallet.transaction_record import TransactionRecord
 
 def print_json(dict):
     print(json.dumps(dict, sort_keys=True, indent=4))
 
-PIGGYBANK_CLSP = "piggybank.clsp"
-CONTRIBUTION_CLSP = "contribution.clsp"
+PIGGYBANK_MOD = load_clvm("piggybank.clsp", package_or_requirement=__name__, search_paths=["../include"])
+CONTRIBUTION_MOD = load_clvm("contribution.clsp", package_or_requirement=__name__, search_paths=["../include"]) 
 
 
 # config/config.yaml
@@ -47,6 +49,9 @@ async def get_coin_async(coin_id: str):
 def get_coin(coin_id: str):
     return asyncio.run(get_coin_async(coin_id))
 
+def get_coin_by_coin_information(parent_coin_info: str, puzzle_hash: str, amount: uint64):
+    coin_id = std_hash(bytes32.fromhex(parent_coin_info) + bytes32.fromhex(puzzle_hash) + int_to_bytes(amount))
+    return get_coin(coin_id.hex())
 
 async def get_transaction_async(tx_id: bytes32):
     wallet_id = "1"
@@ -100,7 +105,7 @@ def send_money(amount, address, fee=0):
 def deploy_smart_coin(clsp_file: str, amount: uint64):
     s = time.perf_counter()
     # load coins (compiled and serialized, same content as clsp.hex)
-    mod = load_clvm(clsp_file, package_or_requirement=__name__)
+    mod = load_clvm(clsp_file, package_or_requirement=__name__, search_paths=["../include"]) 
     # cdv clsp treehash
     treehash = mod.get_tree_hash()
     # cdv encode
@@ -136,30 +141,32 @@ async def push_tx_async(spend_bundle: SpendBundle):
 def push_tx(spend_bundle: SpendBundle):
     return asyncio.run(push_tx_async(spend_bundle))
 
-def deposit(piggybank_coin: Coin, contribution_coin: Coin):
+def deposit(piggybank_coin: Coin, contribution_coins):
+    if type(contribution_coins) != list:
+        contribution_coins: list = [contribution_coins]
+
+    contribution_amount = sum([c.amount for c in contribution_coins])
+
     # coin information, puzzle_reveal, and solution
     piggybank_spend = CoinSpend(
         piggybank_coin,
-        load_clvm(PIGGYBANK_CLSP, package_or_requirement=__name__),
-        solution_for_piggybank(piggybank_coin, contribution_coin.amount)
+        PIGGYBANK_MOD,
+        solution_for_piggybank(piggybank_coin, contribution_amount)
     )
 
-    contribution_spend = CoinSpend(
-        contribution_coin,
-        load_clvm(CONTRIBUTION_CLSP, package_or_requirement=__name__),
-        solution_for_contribution()
-    )
+    cc_puzzle = CONTRIBUTION_MOD
+    cc_solution = solution_for_contribution()
+    contribution_spends = [CoinSpend(c, cc_puzzle, cc_solution) for c in contribution_coins]
 
     # empty signature i.e., c00000.....
     signature = G2Element()
 
+    coin_spends = [cs for cs in contribution_spends]
+    coin_spends.append(piggybank_spend)
     # SpendBundle
     spend_bundle = SpendBundle(
             # coin spends
-            [
-                piggybank_spend,
-                contribution_spend
-            ],
+            coin_spends,
             # aggregated_signature
             signature,
         )
