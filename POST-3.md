@@ -40,7 +40,7 @@ After painstaking creting the spend bundle, the last step is to push the spend b
 
 Fortunately, we can do all the steps above via another program. Chia blockchain and many of associated tools and libraries are written in Python, so we could utilize those code to write a Python program (called a driver code) to loading puzzle, getting puzzle hash, encoding/decoding, or talking with the full node or wallet.
 
-The sample code from the [Driver Code](https://www.youtube.com/watch?v=dGohmAc658c) tutorial video is a good start, but we can do better. The driver code is [here](piggybank/piggybank_drivers.py), but let's see some exmaples:
+The sample code from the [Driver Code](https://www.youtube.com/watch?v=dGohmAc658c) tutorial video is a good start, but we can do better. The driver code is [here](https://github.com/kimsk/chia-piggybank/blob/c8bdd9cc3eead4bac816ae0afd34e0358f834e6a/piggybank/piggybank_drivers.py), but let's see some exmaples:
 
 ### get the puzzle hash and address
 

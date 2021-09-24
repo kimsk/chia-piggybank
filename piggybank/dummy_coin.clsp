@@ -1,0 +1,11 @@
+(mod (
+        new_amount
+        puzzle_hash
+     )
+
+  (include condition_codes.clib)
+
+    (list
+        (list CREATE_COIN puzzle_hash new_amount)
+    )
+)
