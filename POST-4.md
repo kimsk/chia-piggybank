@@ -162,7 +162,11 @@ To prevent unintentionally contribution coin spending, we can use chialisp condi
 
 ### New Contribution Coins
 
-In our case, we add `ASSERT_PUZZLE_ANNOUNCEMENT` which force the spend to be valid if and only if the contribution coin is spent with a coin with the **specified puzzle hash** (i.e., `0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64`) which annouce the message, **approved**. Let's look at the new chialisp code:
+We add `ASSERT_PUZZLE_ANNOUNCEMENT` which forces the spend to be valid only if the announcement is created in the same block. The announcement makes sure that the contribution coin is spent together with a piggybank coin. 
+
+The new piggybank coin has the **puzzle hash** (i.e., `0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64`), and it annouces the message, **approved**.
+
+Let's look at the new chialisp puzzle of the contribution coin:
 
 ```lisp
 (mod ()
@@ -203,7 +207,11 @@ waiting until transaction 59ef79cde87d7f04823eaa81da3ee622decf280a6c3984b0acaa2e
         "timestamp": 1632930223
     }
 }
+```
 
+Now, let's try to spend it.
+
+```sh
 ❯ python3 -i ./piggybank_drivers.py
 >>> cc = get_coin("7ff06f89a5fd1ce8822f78115afd68cb8e8036ff502e969ec904a3fcd19584d7")
 >>> deposit_contrbution(cc)
@@ -255,7 +263,7 @@ Traceback (most recent call last):
 ValueError: {'error': 'Failed to include transaction e0d9c652a97f33ab8d3ec03be7019d74b58ad0633f86222f73fea555ca2afadd, error ASSERT_ANNOUNCE_CONSUMED_FAILED', 'success': False}
 ```
 
-Sweet! Both spends with and without dummy coin fail with the error, `ASSERT_ANNOUNCE_CONSUMED_FAILED`, and our contribution coin is intact.
+Sweet! Both spends with and without dummy coin fail with the error, `ASSERT_ANNOUNCE_CONSUMED_FAILED`, and our contribution coin is still intact.
 
 
 ```sh
@@ -278,7 +286,7 @@ Sweet! Both spends with and without dummy coin fail with the error, `ASSERT_ANNO
 
 ### New Piggybank Coins
 
-If we want to be able to spend our contribution coins (i.e., deposit to the piggybank), we also need to add `CREATE_PUZZLE_ANNOUNCEMENT` with the message, **approved**, as well.
+If we want to be able to spend our contribution coins (i.e., deposit to the piggybank), we will need to update [piggybank.clsp](https://github.com/kimsk/chia-piggybank/commit/3e6b22007a1826cd528409cb825637d2b170b87c#diff-1aac05a82431cbcd8a6462c03805dc01b56db6b624a0e505e25ed42de5df32e4) by adding `CREATE_PUZZLE_ANNOUNCEMENT` with the message, **approved**.
 
 ```lisp
 ...
@@ -299,7 +307,7 @@ If we want to be able to spend our contribution coins (i.e., deposit to the pigg
 ...
 ```
 
-The new piggybank coin's puzzle hash is `5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64` which is the hard-coded puzzle hash in our new contribution coin's puzzle. Let see if we can now spend the contribution coin now:
+The new piggybank coin's puzzle hash is `5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64` which is the [hard-coded puzzle hash](https://github.com/kimsk/chia-piggybank/blob/3e6b22007a1826cd528409cb825637d2b170b87c/piggybank/contribution.clsp#L5) in our new contribution coin's puzzle. Let see if we can now spend the contribution coin now:
 
 ```sh
 >>> pc = get_coin("c2e3b33f62338b45a5fddaaaa6883ad878574adee9efd3470c34204b72db7704")
@@ -367,7 +375,7 @@ The result looks good! We spend the contribution coin and deposit **100** mojos 
 
 We see both spent piggybank with **zero** mojo and a new one with **100** mojos!
 
-If we want to see the real output from those spends above, we can use `cdv inspect spendbundles <spend bundle json file> -db` to see debugging information such as the created & asserted announcement hash.
+> If we want to see the real output from those spends above, we can use `cdv inspect spendbundles <spend bundle json file> -db` to see debugging information such as the created & asserted announcement hash.
 
 ```sh
 ❯ cdv inspect spendbundles ./spend_bundle_pc_cc.json -db
@@ -403,7 +411,9 @@ symdiff of puzzle announcements = []
 
 ## Conclusions
 
-This post shows us how we bad actors can steal our coins and how we can prevent them using `ANNOUCEMENT` which make sure that a piggybank and contribution coin(s) have to be spent together. However, our coin is still not totally secure. Let's the other issue and how we can prevent it in the next post.
+This post shows us how bad actors can steal our coins and how we can prevent them by using `ANNOUCEMENT`. `ANNOUCEMENT` ensures that a piggybank and contribution coin(s) have to be spent together.
+
+However, our coin is still not totally secure. Let's the other issue and how we can prevent it in the next post.
 
 ## References
 
