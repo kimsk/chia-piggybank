@@ -1,0 +1,41 @@
+{
+    "aggregated_signature": "0xc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "coin_solutions": [
+        {
+            "coin": {
+                "amount": 100,
+                "parent_coin_info": "0xa803f0dea294bad9a24ed244becba9ab8c4d5876ba1f5665972748c7d208e770",
+                "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff04ffff04ffff0bff06ffff0188617070726f76656480ff808080ff8080ffff04ffff01ff3fa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64ff018080",
+            "solution": "0x80"
+        },
+        {
+            "coin": {
+                "amount": 100,
+                "parent_coin_info": "0x824dc67c24fe833e5b01158dc1d8fba6740a9b01b0715fd98c10b981453225ab",
+                "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff04ffff04ffff0bff06ffff0188617070726f76656480ff808080ff8080ffff04ffff01ff3fa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64ff018080",
+            "solution": "0x80"
+        },
+        {
+            "coin": {
+                "amount": 500,
+                "parent_coin_info": "0x11e598e7ec4244b8cc484d129a6788f3b3d8b8c76d00b6b0d725d2b55bbbb3c9",
+                "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff04ffff04ffff0bff06ffff0188617070726f76656480ff808080ff8080ffff04ffff01ff3fa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64ff018080",
+            "solution": "0x80"
+        },
+        {
+            "coin": {
+                "amount": 100,
+                "parent_coin_info": "0xc2e3b33f62338b45a5fddaaaa6883ad878574adee9efd3470c34204b72db7704",
+                "puzzle_hash": "0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64"
+            },
+            "puzzle_reveal": "0xff02ffff01ff02ffff03ffff15ff0bff0580ffff01ff02ffff03ffff15ff0bff0e80ffff01ff04ffff04ff0cffff04ff08ffff04ff0bff80808080ffff04ffff04ff0cffff04ff17ffff01ff80808080ffff04ffff04ff0affff01ff88617070726f7665648080ff80808080ffff01ff04ffff04ff0cffff04ff17ffff04ff0bff80808080ffff04ffff04ff0affff01ff88617070726f7665648080ff80808080ff0180ffff01ff088080ff0180ffff04ffff01ffffa0a6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e633ff3e8201f4ff018080",
+            "solution": "0xff64ff820320ffa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f6480"
+        }
+    ]
+}

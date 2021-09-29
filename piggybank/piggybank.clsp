@@ -14,12 +14,14 @@
     (list
       (list CREATE_COIN CASH_OUT_PUZZLE_HASH new_amount)
       (list CREATE_COIN my_puzzlehash 0)
+      (list CREATE_PUZZLE_ANNOUNCEMENT "approved")
     )
   )
 
   (defun-inline recreate_self (new_amount my_puzzlehash)
     (list
       (list CREATE_COIN my_puzzlehash new_amount)
+      (list CREATE_PUZZLE_ANNOUNCEMENT "approved")
     )
   )
 

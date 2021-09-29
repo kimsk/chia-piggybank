@@ -58,7 +58,7 @@ The malicious user can create a spend bundle with a contribution coin and a dumm
     ]
 }
 ```
-### Steal By A Farmer
+### Farmers Steal Our Coins As Fees
 
 The malicious farmer can also steal mojos by spending contribution coins and take our mojos as transaction fees!
 
@@ -156,6 +156,254 @@ So let's look at the block **636507**, and you will see that the farmer takes ou
 }
 ```
 
+## Using ANNOUNCEMENT To Secure Contribution Coins
+
+To prevent unintentionally contribution coin spending, we can use chialisp conditions. 
+
+### New Contribution Coins
+
+In our case, we add `ASSERT_PUZZLE_ANNOUNCEMENT` which force the spend to be valid if and only if the contribution coin is spent with a coin with the **specified puzzle hash** (i.e., `0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64`) which annouce the message, **approved**. Let's look at the new chialisp code:
+
+```lisp
+(mod ()
+
+    (include condition_codes.clib)
+
+    (defconstant PIGGYBANK_PUZZLE_HASH 0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64)
+
+    (list
+        (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 PIGGYBANK_PUZZLE_HASH "approved"))
+    )
+)
+```
+
+Let's see if we can spend our new contribution coin (i.e., puzzle hash: `e6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107`) after we add the `ASSERT_PUZZLE_ANNOUNCEMENT`. But first, we should deploy the new contribution coin to the blockchain.
+
+```sh
+❯ python3 -i ./piggybank_drivers.py
+>>> CONTRIBUTION_MOD.get_tree_hash()
+<bytes32: e6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107>
+>>> deploy_smart_coin(CONTRIBUTION_MOD, 100)
+sending 100 to txch1u66hrvqew3xztevecrmrty7yqqasyhy0gd7xjk6z9vfapxlvjyrsmy9cns...
+waiting until transaction 59ef79cde87d7f04823eaa81da3ee622decf280a6c3984b0acaa2eab93696469 is confirmed...
+.........
+# once it's done
+❯ cdv rpc coinrecords --by puzhash e6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107 -nd
+{
+    "7ff06f89a5fd1ce8822f78115afd68cb8e8036ff502e969ec904a3fcd19584d7": {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x2227900b2923b3c595cfe119604b75bdcf7bf4923bf7148cb53d73cd041c13db",
+            "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 659735,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1632930223
+    }
+}
+
+❯ python3 -i ./piggybank_drivers.py
+>>> cc = get_coin("7ff06f89a5fd1ce8822f78115afd68cb8e8036ff502e969ec904a3fcd19584d7")
+>>> deposit_contrbution(cc)
+{
+    "aggregated_signature": "0xc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "coin_solutions": [
+        {
+            "coin": {
+                "amount": 100,
+                "parent_coin_info": "0x2227900b2923b3c595cfe119604b75bdcf7bf4923bf7148cb53d73cd041c13db",
+                "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff04ffff04ffff0bff06ffff0188617070726f76656480ff808080ff8080ffff04ffff01ff3fa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64ff018080",
+            "solution": "0x80"
+        }
+    ]
+}
+Traceback (most recent call last):
+  ...
+ValueError: {'error': 'Failed to include transaction a4768dc4a8edbb3842b6bacca504509f3e7e318d1216b68457fbd84967ac6392, error ASSERT_ANNOUNCE_CONSUMED_FAILED', 'success': False}
+
+>>> dc = get_coin("12c0709babe92736387cd4ab8b4082af3aab33422fcc9cd1092ba6f6f6b01b66")
+>>> deposit_dummy(dc, cc, "0c799dadcbd2fbc719976d70f7d029e60923013e9818cab16f46865a6c748217")
+{
+    "aggregated_signature": "0xc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "coin_solutions": [
+        {
+            "coin": {
+                "amount": 100,
+                "parent_coin_info": "0x2227900b2923b3c595cfe119604b75bdcf7bf4923bf7148cb53d73cd041c13db",
+                "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff04ffff04ffff0bff06ffff0188617070726f76656480ff808080ff8080ffff04ffff01ff3fa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64ff018080",
+            "solution": "0x80"
+        },
+        {
+            "coin": {
+                "amount": 0,
+                "parent_coin_info": "0x9795b5b28882e26ee724e546c4c5ba28398f62eb62de9d6be1d4f75f7e29110e",
+                "puzzle_hash": "0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff02ffff04ff0bffff04ff05ff80808080ff8080ffff04ffff0133ff018080",
+            "solution": "0xff64ffa00c799dadcbd2fbc719976d70f7d029e60923013e9818cab16f46865a6c74821780"
+        }
+    ]
+}
+Traceback (most recent call last):
+  ...
+ValueError: {'error': 'Failed to include transaction e0d9c652a97f33ab8d3ec03be7019d74b58ad0633f86222f73fea555ca2afadd, error ASSERT_ANNOUNCE_CONSUMED_FAILED', 'success': False}
+```
+
+Sweet! Both spends with and without dummy coin fail with the error, `ASSERT_ANNOUNCE_CONSUMED_FAILED`, and our contribution coin is intact.
+
+
+```sh
+❯ cdv rpc coinrecords --by id 7ff06f89a5fd1ce8822f78115afd68cb8e8036ff502e969ec904a3fcd19584d7
+[
+    {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x2227900b2923b3c595cfe119604b75bdcf7bf4923bf7148cb53d73cd041c13db",
+            "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 659735,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1632930223
+    }
+]
+```
+
+### New Piggybank Coins
+
+If we want to be able to spend our contribution coins (i.e., deposit to the piggybank), we also need to add `CREATE_PUZZLE_ANNOUNCEMENT` with the message, **approved**, as well.
+
+```lisp
+...
+  (defun-inline cash_out (CASH_OUT_PUZZLE_HASH new_amount my_puzzlehash)
+    (list
+      (list CREATE_COIN CASH_OUT_PUZZLE_HASH new_amount)
+      (list CREATE_COIN my_puzzlehash 0)
+      (list CREATE_PUZZLE_ANNOUNCEMENT "approved")
+    )
+  )
+
+  (defun-inline recreate_self (new_amount my_puzzlehash)
+    (list
+      (list CREATE_COIN my_puzzlehash new_amount)
+      (list CREATE_PUZZLE_ANNOUNCEMENT "approved")
+    )
+  )
+...
+```
+
+The new piggybank coin's puzzle hash is `5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64` which is the hard-coded puzzle hash in our new contribution coin's puzzle. Let see if we can now spend the contribution coin now:
+
+```sh
+>>> pc = get_coin("c2e3b33f62338b45a5fddaaaa6883ad878574adee9efd3470c34204b72db7704")
+>>> deposit_piggybank(pc, cc)
+{
+    "aggregated_signature": "0xc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "coin_solutions": [
+        {
+            "coin": {
+                "amount": 100,
+                "parent_coin_info": "0x2227900b2923b3c595cfe119604b75bdcf7bf4923bf7148cb53d73cd041c13db",
+                "puzzle_hash": "0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff04ffff04ffff0bff06ffff0188617070726f76656480ff808080ff8080ffff04ffff01ff3fa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64ff018080",
+            "solution": "0x80"
+        },
+        {
+            "coin": {
+                "amount": 0,
+                "parent_coin_info": "0x8ef80196c5a03cc1d0a728806e6dc770d974b47bfc67358f6463235cc5bcde8d",
+                "puzzle_hash": "0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64"
+            },
+            "puzzle_reveal": "0xff02ffff01ff02ffff03ffff15ff0bff0580ffff01ff02ffff03ffff15ff0bff0e80ffff01ff04ffff04ff0cffff04ff08ffff04ff0bff80808080ffff04ffff04ff0cffff04ff17ffff01ff80808080ffff04ffff04ff0affff01ff88617070726f7665648080ff80808080ffff01ff04ffff04ff0cffff04ff17ffff04ff0bff80808080ffff04ffff04ff0affff01ff88617070726f7665648080ff80808080ff0180ffff01ff088080ff0180ffff04ffff01ffffa0a6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e633ff3e8201f4ff018080",
+            "solution": "0xff80ff64ffa05c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f6480"
+        }
+    ]
+}
+{
+    "status": "SUCCESS",
+    "success": true
+}
+```
+
+The result looks good! We spend the contribution coin and deposit **100** mojos to the piggybank. Let's double check:
+
+```sh
+❯ cdv rpc coinrecords --by puzhash 5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64
+[
+    {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0xc2e3b33f62338b45a5fddaaaa6883ad878574adee9efd3470c34204b72db7704",
+            "puzzle_hash": "0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 659746,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1632930476
+    },
+    {
+        "coin": {
+            "amount": 0,
+            "parent_coin_info": "0x8ef80196c5a03cc1d0a728806e6dc770d974b47bfc67358f6463235cc5bcde8d",
+            "puzzle_hash": "0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 659576,
+        "spent": true,
+        "spent_block_index": 659746,
+        "timestamp": 1632927634
+    }
+]
+```
+
+We see both spent piggybank with **zero** mojo and a new one with **100** mojos!
+
+If we want to see the real output from those spends above, we can use `cdv inspect spendbundles <spend bundle json file> -db` to see debugging information such as the created & asserted announcement hash.
+
+```sh
+❯ cdv inspect spendbundles ./spend_bundle_pc_cc.json -db
+...
+-------
+
+spent coins
+  (0x2227900b2923b3c595cfe119604b75bdcf7bf4923bf7148cb53d73cd041c13db 0xe6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107 100)
+      => spent coin id 7ff06f89a5fd1ce8822f78115afd68cb8e8036ff502e969ec904a3fcd19584d7
+  (0x8ef80196c5a03cc1d0a728806e6dc770d974b47bfc67358f6463235cc5bcde8d 0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64 ())
+      => spent coin id c2e3b33f62338b45a5fddaaaa6883ad878574adee9efd3470c34204b72db7704
+
+created coins
+  (0xc2e3b33f62338b45a5fddaaaa6883ad878574adee9efd3470c34204b72db7704 0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64 100)
+      => created coin id 926273035e3760dbbf158f560a7dbc248c6683488baac4e04588156f42f8e6fa
+created puzzle announcements
+  ['0x5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64', '0x617070726f766564'] =>
+      6aede5fb98a81e0ea3c1955f16dc2df5889908d839d30e10d180d29a5e872b44
+
+
+zero_coin_set = []
+
+created  puzzle announcements = ['6aede5fb98a81e0ea3c1955f16dc2df5889908d839d30e10d180d29a5e872b44']
+
+asserted puzzle announcements = ['6aede5fb98a81e0ea3c1955f16dc2df5889908d839d30e10d180d29a5e872b44']
+
+symdiff of puzzle announcements = []
+
+
+================================================================================
+...
+```
+
+## Conclusions
+
+This post shows us how we bad actors can steal our coins and how we can prevent them using `ANNOUCEMENT` which make sure that a piggybank and contribution coin(s) have to be spent together. However, our coin is still not totally secure. Let's the other issue and how we can prevent it in the next post.
 
 ## References
 

@@ -24,10 +24,12 @@ from chia.wallet.transaction_record import TransactionRecord
 def print_json(dict):
     print(json.dumps(dict, sort_keys=True, indent=4))
 
-# c23532ddfb0d78654cf73e9a1e5b417fc7cc110d40cb8c08198d6057064eb7f8
+# c23532ddfb0d78654cf73e9a1e5b417fc7cc110d40cb8c08198d6057064eb7f8 | original
+# 5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64 | w/ CREATE_PUZZLE_ANNOUNCEMENT
 PIGGYBANK_MOD = load_clvm("piggybank.clsp", package_or_requirement=__name__, search_paths=["../include"])
 
-# 4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a
+# 4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a | original
+# e6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107 | w/ ASSERT_PUZZLE_ANNOUNCEMENT
 CONTRIBUTION_MOD = load_clvm("contribution.clsp", package_or_requirement=__name__, search_paths=["../include"])
 
 # b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd
