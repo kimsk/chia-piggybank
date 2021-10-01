@@ -1,6 +1,6 @@
 # Securing Piggybank Coin (ASSERT_MY_*)
 
-In the [last post](POST-4.md), we are able to guarantee that our contribution coins have to be spent together with specific piggybank coin. 
+In the [last post](POST-4.md), we are able to guarantee that our contribution coins have to be spent together with our designated piggybank coin by aseerting puzzle annoucement.
 
 However, the existing piggybank coin still has issues allowing bad actors to steal our mojos. Let's look at those issues together:
 
@@ -30,7 +30,7 @@ Let's look at the `recreate_self` function again:
 We can see that, `my_puzzlehash` which is a part of the solution to the puzzle can be anything. Any bad actors can create a spend bundle with their wallet's puzzle hash and steal our mojos by providing their own puzzle hash.
 
 
-We add the code to allow puzzle hash to be set manually (instead of using piggybank coin puzzle hash).
+To help us working on this issue, we add the code to allow puzzle hash to be set manually (instead of using piggybank coin puzzle hash).
 
 ```python
 def deposit_to_puzzle_hash(pc: Coin, cc: Coin, puzzle_hash):
@@ -92,9 +92,16 @@ We will spend two coins above with the dummy coin's puzzle hash:
 >>> cc = get_coin("1dcdaa3ae3ce5488ff40cc95362ddb8a15d859cbc1ec68e3aee7dd4f4c1adc6f")
 
 >>> deposit_to_puzzle_hash(pc, cc, bytes32.fromhex("b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"))
+...
+{
+    "status": "SUCCESS",
+    "success": true
+}
 ```
 
 Our piggybank contribution coins were spent in block **668268**, but we don't see the new piggybank coin because mojos have been set to dummy coin's puzzle hash!
+
+> Even with good intention, any typo or bug in our driver code could also send mojos to invalid puzzle hash and we could lost those mojos forever.
 
 ```sh
 ❯ cdv rpc coinrecords --by id 4ebcd582063a4a3a3ecd3dc5ae6cab14cc6e448ad5e06e26b258e065d571c265         
@@ -151,6 +158,85 @@ Our piggybank contribution coins were spent in block **668268**, but we don't se
 ]
 ```
 
+### `ASSERT_MY_PUZZLEHASH`
+
+The problem was that we have to rely on the puzzle hash from solution to create a new piggybank coin. Indeed, the puzzle hash of the new coin has to be the same as the current one to meet our requirement. Fortunately, we can force this by adding `ASSERT_MY_PUZZLEHASH` condition to make sure the input puzzle hash is the same as the puzzle hash of the coin that contains this puzzle.
+
+Let's check our new piggybank chialisp puzzle:
+
+```lisp
+(mod (
+        my_amount
+        new_amount
+        my_puzzlehash
+     )
+  ...
+  (defun-inline recreate_self (new_amount my_puzzlehash)
+    (list
+      (list CREATE_COIN my_puzzlehash new_amount)
+      (list CREATE_PUZZLE_ANNOUNCEMENT "approved")
+      (list ASSERT_MY_PUZZLEHASH my_puzzlehash)
+    )
+  )
+  ...
+)
+```
+
+The puzzle hash for the new piggybank coin is now `2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7`. So let's see if using dummy coin's puzzle hash fails and using new piggybank coin's puzzle hash works as expected:
+
+```sh
+❯ python3 -i ./piggybank_drivers.py
+>>> pc = get_coin("4d2a59b2d013dcf84339149173e910932ba1161c5dec16dfb8eecbfbe678f819")
+>>> cc = get_coin("b63f0af2ffb57be054ad052995fb71bbc301900d9f7be41d1bfed79ff305e667")
+>>> pc
+Coin(parent_coin_info=<bytes32: 2f7edc65d5844b8f320aea02fd147f95ecb0737b2be5fdb2e3105cdc7917a974>, puzzle_hash=<bytes32: 2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7>, amount=0)
+>>> cc
+Coin(parent_coin_info=<bytes32: d4c554fa571ef8d6fda67e5d6aab1f68ae59aedd25263836b31de927106c05c6>, puzzle_hash=<bytes32: 8b198e66bc96c121341ca38b995af1dcd7e56b10d13fc5b809d38fd7274b2155>, amount=100)
+>>> deposit_to_puzzle_hash(pc, cc, bytes32.fromhex("b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"))
+...
+ValueError: {'error': 'Failed to include transaction dd6ffd5bbdc26d1c218061a41a0352878d401c303f8977d18790a1a5e1de3c41, error ASSERT_MY_PUZZLEHASH_FAILED', 'success': False}
+
+>>> deposit_to_puzzle_hash(pc, cc, bytes32.fromhex("2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7"))
+...
+{
+    "status": "SUCCESS",
+    "success": true
+}
+```
+
+Perfect! Unless we provide the correct puzzle hash (i.e., piggybank's), the spend would not go through.
+
+Our unspent piggybank should have **100** mojos now:
+
+```sh
+❯ cdv rpc coinrecords --by puzhash 2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7
+[
+    {
+        "coin": {
+            "amount": 0,
+            "parent_coin_info": "0x2f7edc65d5844b8f320aea02fd147f95ecb0737b2be5fdb2e3105cdc7917a974",
+            "puzzle_hash": "0x2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 668980,
+        "spent": true,
+        "spent_block_index": 669097,
+        "timestamp": 1633098878
+    },
+    {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x4d2a59b2d013dcf84339149173e910932ba1161c5dec16dfb8eecbfbe678f819",
+            "puzzle_hash": "0x2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 669097,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633100994
+    }
+]
+```
 
 ## References
 

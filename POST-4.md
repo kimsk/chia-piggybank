@@ -3,7 +3,7 @@
 > [Money ain’t got no owners, just spenders](https://www.youtube.com/watch?v=PT2I1T87nwQ&t=133s) - Omar Little | The Wire
 
 
-There is no concept of coin ownership as the wallet address is actually a [bech32m decoded puzzle hash](https://www.chiaexplorer.com/tools/address-puzzlehash-converter). So our puzzle has to be able to prevent the coin to be spent unintentionally. We have been coding our smart coins in chialisp and the driver code in python to make it easier to deploy and spend those coins. However, there is nothing to prevent other people to [spend](https://chialisp.com/docs/coins_spends_and_wallets#spends) our coins. 
+In Chia, there is no concept of coin ownership as the wallet address is actually a [bech32m decoded puzzle hash](https://www.chiaexplorer.com/tools/address-puzzlehash-converter). So our puzzle has to be able to prevent the coin to be spent unintentionally. We have been coding our smart coins in chialisp and the driver code in python to make it easier to deploy/spend those coins. However, there is nothing to prevent other people to [spend](https://chialisp.com/docs/coins_spends_and_wallets#spends) our coins.
 
 
 ## Steal Contribution Coins
