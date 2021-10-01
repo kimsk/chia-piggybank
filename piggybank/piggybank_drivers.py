@@ -200,6 +200,20 @@ def deposit_dummy(dummy_coin: Coin, contribution_coins, puzzle_hash):
     coin_spends.append(dummy_coin_spend)
     spend(coin_spends, signature)
 
+def deposit_to_puzzle_hash(pc: Coin, cc: Coin, puzzle_hash: bytes32):
+    piggybank_spend = CoinSpend(
+        pc,
+        PIGGYBANK_MOD,
+        Program.to([pc.amount, (pc.amount + cc.amount), puzzle_hash])
+
+    )
+    contribution_spend = CoinSpend(cc, CONTRIBUTION_MOD, solution_for_contribution())
+
+    spend(
+        [piggybank_spend, contribution_spend],
+        signature = G2Element()
+    )
+
 def deposit_contrbution(contribution_coins):
     if type(contribution_coins) != list:
         contribution_coins: list = [contribution_coins]

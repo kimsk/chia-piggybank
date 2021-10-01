@@ -413,7 +413,7 @@ symdiff of puzzle announcements = []
 
 This post shows us how bad actors can steal our coins and how we can prevent them by using `ANNOUCEMENT`. `ANNOUCEMENT` ensures that a piggybank and contribution coin(s) have to be spent together.
 
-However, our coin is still not totally secure. Let's the other issue and how we can prevent it in the next post.
+However, our coin is still not totally secure. Let's the other issue and how we can prevent it in the [next post](POST-5.md).
 
 ## References
 
