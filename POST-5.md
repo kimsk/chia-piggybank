@@ -457,6 +457,104 @@ Let's check all of our coins again after the spend bundle is processed:
 
 We can see that the piggybank and contribution coins are gone and the new dummy coin has all mojos.
 
+### Use ASSERT_PUZZLE_ANNOUCEMENT To Assert Contribution Coin's `my_amount`
+
+The issue could be resolved by the followings:
+
+1. A piggybank coin creates additional announcements for each contribution coin's amount.
+2. Every contribution coin asserts an announcement from the piggybank coin of its own amount.
+
+Let's see the updated chialisp code:
+
+#### Piggybank Coin
+```lisp
+(mod (
+        my_amount
+        contributions
+        my_puzzlehash
+     )
+
+  (include condition_codes.clib)
+
+  (defconstant TARGET_AMOUNT 500)
+  (defconstant CASH_OUT_PUZZLE_HASH 0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6)
+
+  (defun sum (contributions)
+    (if (l contributions)
+      (+ (f contributions) (sum (r contributions)))
+      0
+    )
+  )
+
+  (defun announce (contributions)
+    (if (l contributions)
+      (c 
+        (list CREATE_PUZZLE_ANNOUNCEMENT (f contributions))
+        (announce (r contributions))
+      )
+      ()
+    )
+  )
+
+  (defun merge_lists (l1 l2)
+    (if (l l1)
+        (c (f l1) (merge_lists (r l1) l2))
+        l2
+    )
+  )
+
+  (defun-inline cash_out (CASH_OUT_PUZZLE_HASH contributions my_puzzlehash)
+    (merge_lists
+      (list
+        (list CREATE_COIN CASH_OUT_PUZZLE_HASH (+ my_amount (sum contributions)))
+        (list CREATE_COIN my_puzzlehash 0)
+        (list ASSERT_MY_PUZZLEHASH my_puzzlehash)
+        (list ASSERT_MY_AMOUNT my_amount)
+      )
+      (announce contributions)
+    )
+  )
+
+  (defun-inline recreate_self (contributions my_puzzlehash)
+    (merge_lists
+      (list
+        (list CREATE_COIN my_puzzlehash (+ my_amount (sum contributions)))
+        (list ASSERT_MY_PUZZLEHASH my_puzzlehash)
+        (list ASSERT_MY_AMOUNT my_amount)
+      )
+      (announce contributions)
+    )
+  )
+
+  ; main
+  (if (> (+ my_amount (sum contributions)) my_amount)
+    (if (> (+ my_amount (sum contributions)) TARGET_AMOUNT)
+      (cash_out CASH_OUT_PUZZLE_HASH contributions my_puzzlehash)
+      (recreate_self contributions my_puzzlehash)
+    )
+    (x)
+  )
+)
+```
+
+#### Contribution Coin
+```lisp
+(mod (my_amount)
+
+    (include condition_codes.clib)
+
+    (defconstant PIGGYBANK_PUZZLE_HASH 0x2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7)
+
+    (list
+        (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 PIGGYBANK_PUZZLE_HASH my_amount))
+        (list ASSERT_MY_AMOUNT my_amount)
+    )
+)
+```
+
+
+
+
 ## References
 
 - [chialsip.com | 8 - Security](https://chialisp.com/docs/security)

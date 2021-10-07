@@ -1,6 +1,6 @@
 (mod (
         my_amount
-        new_amount
+        contributions
         my_puzzlehash
      )
 
@@ -9,29 +9,58 @@
   (defconstant TARGET_AMOUNT 500)
   (defconstant CASH_OUT_PUZZLE_HASH 0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6)
 
-
-  (defun-inline cash_out (CASH_OUT_PUZZLE_HASH new_amount my_puzzlehash)
-    (list
-      (list CREATE_COIN CASH_OUT_PUZZLE_HASH new_amount)
-      (list CREATE_COIN my_puzzlehash 0)
-      (list CREATE_PUZZLE_ANNOUNCEMENT "approved")
-      (list ASSERT_MY_PUZZLEHASH my_puzzlehash)
+  (defun sum (contributions)
+    (if (l contributions)
+      (+ (f contributions) (sum (r contributions)))
+      0
     )
   )
 
-  (defun-inline recreate_self (new_amount my_puzzlehash)
-    (list
-      (list CREATE_COIN my_puzzlehash new_amount)
-      (list CREATE_PUZZLE_ANNOUNCEMENT "approved")
-      (list ASSERT_MY_PUZZLEHASH my_puzzlehash)
+  (defun announce (contributions)
+    (if (l contributions)
+      (c 
+        (list CREATE_PUZZLE_ANNOUNCEMENT (f contributions))
+        (announce (r contributions))
+      )
+      ()
+    )
+  )
+
+  (defun merge_lists (l1 l2)
+    (if (l l1)
+        (c (f l1) (merge_lists (r l1) l2))
+        l2
+    )
+  )
+
+  (defun-inline cash_out (CASH_OUT_PUZZLE_HASH contributions my_puzzlehash)
+    (merge_lists
+      (list
+        (list CREATE_COIN CASH_OUT_PUZZLE_HASH (+ my_amount (sum contributions)))
+        (list CREATE_COIN my_puzzlehash 0)
+        (list ASSERT_MY_PUZZLEHASH my_puzzlehash)
+        (list ASSERT_MY_AMOUNT my_amount)
+      )
+      (announce contributions)
+    )
+  )
+
+  (defun-inline recreate_self (contributions my_puzzlehash)
+    (merge_lists
+      (list
+        (list CREATE_COIN my_puzzlehash (+ my_amount (sum contributions)))
+        (list ASSERT_MY_PUZZLEHASH my_puzzlehash)
+        (list ASSERT_MY_AMOUNT my_amount)
+      )
+      (announce contributions)
     )
   )
 
   ; main
-  (if (> new_amount my_amount)
-    (if (> new_amount TARGET_AMOUNT)
-      (cash_out CASH_OUT_PUZZLE_HASH new_amount my_puzzlehash)
-      (recreate_self new_amount my_puzzlehash)
+  (if (> (+ my_amount (sum contributions)) my_amount)
+    (if (> (+ my_amount (sum contributions)) TARGET_AMOUNT)
+      (cash_out CASH_OUT_PUZZLE_HASH contributions my_puzzlehash)
+      (recreate_self contributions my_puzzlehash)
     )
     (x)
   )
