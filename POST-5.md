@@ -899,10 +899,7 @@ symdiff of puzzle announcements = []
 
 ## Conclusions
 
-We have seen how our coins are still not secure and been trying to secure our coins by using `ASSERT_MY_AMOUNT` and `ASSERT_MY_PUZZLEHASH`. However, we still could not figure out how to check the `new_amount` even though we have code that increases 10x of the CLVM costs.
-
-...
-
+We have been trying to secure our coins by using `ASSERT_MY_AMOUNT` and `ASSERT_MY_PUZZLEHASH`. Also we try to verify the contribution coin amount by using **annoucement**. However, our coins are still not secure and bad actors can still steal our contribution coins even though we have code that increases the CLVM costs by 10x.
 
 ## References
 
