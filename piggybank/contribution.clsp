@@ -1,10 +1,11 @@
-(mod ()
+(mod (my_amount)
 
     (include condition_codes.clib)
 
-    (defconstant PIGGYBANK_PUZZLE_HASH 0x2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7)
+    (defconstant PIGGYBANK_PUZZLE_HASH 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d)
 
     (list
-        (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 PIGGYBANK_PUZZLE_HASH "approved"))
+        (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 PIGGYBANK_PUZZLE_HASH my_amount))
+        (list ASSERT_MY_AMOUNT my_amount)
     )
 )
