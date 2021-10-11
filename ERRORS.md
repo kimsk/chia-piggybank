@@ -1,2 +1,4 @@
-`UNKNOWN_UNSPENT`: Coin infos is invalid.
-`DOUBLE_SPEND`: Spend bundle is already processed.
+- `UNKNOWN_UNSPENT`: Coin infos is invalid.
+- `DOUBLE_SPEND`: Spend bundle is already processed.
+- `MINTING_COIN`: More mojos are created than burnt
+- `MEMPOOL_CONFLICT`

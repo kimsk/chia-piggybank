@@ -459,7 +459,7 @@ We can see that the piggybank and contribution coins are gone and the new dummy 
 
 ### Use ASSERT_PUZZLE_ANNOUCEMENT To Assert Contribution Coin's `my_amount`
 
-The issue could be resolved by the followings:
+Let's see if we can add more **assertions** to address the security issue by the followings:
 
 1. A piggybank coin creates additional announcements for each contribution coin's amount.
 2. Every contribution coin asserts an announcement from the piggybank coin of its own amount.
@@ -552,7 +552,166 @@ Let's see the updated chialisp code:
 )
 ```
 
+#### Recursive Function
 
+
+
+
+
+```sh
+❯ python3 -i ./piggybank_drivers.py
+>>> PIGGYBANK_MOD.get_tree_hash()
+<bytes32: d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d>
+>>> CONTRIBUTION_MOD.get_tree_hash()
+<bytes32: 6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d>
+```
+
+##### Piggybank Coin
+```sh
+❯ cdv rpc coinrecords --by puzhash d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d -ou -nd
+{
+    "70a721759d9d3a6a200c32ef36cc72d8cb440f5149d9d9e68f82bf97f25ecc0d": {
+        "coin": {
+            "amount": 0,
+            "parent_coin_info": "0xce16680ed68ddafa6d54258c2cdafcca4c0181e29fb5993a8572c787670e67e8",
+            "puzzle_hash": "0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 713007,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633926825
+    }
+}
+```
+
+##### Contribution Coins
+```sh
+❯ cdv rpc coinrecords --by puzhash  6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d -ou -nd
+{
+    "3bb538b58ae8c2d703f03a2ffab53a5565b36d44d3a38b94ed7fd482a9d07681": {
+        "coin": {
+            "amount": 150,
+            "parent_coin_info": "0x9834d182141244019b55795806dda1a5c70d4d733dfa2d9ca5b008f6eec3ba34",
+            "puzzle_hash": "0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 713096,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633928555
+    },
+    "5fdf91cfd695f3b7f90f3d89a9e98b950684af41c3a08c9272e8499eb157b502": {
+        "coin": {
+            "amount": 200,
+            "parent_coin_info": "0x55d6ed6dac75250dba194efa1e22400c5a22ae5f0b604496c5166d05be1fd1ec",
+            "puzzle_hash": "0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 713088,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633928459
+    },
+    "9bd47da5c7547671a7f343837f72090b93846ab714fdb8de5b915bdc6d223d7b": {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x901b513acb9751ac2e52e46d8648f28f442711d016be9419756f4bd39e4669a5",
+            "puzzle_hash": "0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 713076,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633928125
+    },
+    "f1676b72da59a8687afd5776d02bfb49d0b4fcdae5c0c0b6d7c987bf63013cd0": {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x4fad6d1eb0dedca392ca93a971271905fbe22c7638185251b13cab396b139301",
+            "puzzle_hash": "0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 713103,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633928656
+    }
+}
+```
+
+##### Dummy Coin
+```sh
+❯ cdv rpc coinrecords --by puzhash b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd -ou -nd
+{
+    "86052ac34f41224c12ed2dfc41a690ab470f2a5779698d32c3a0ffacda3f6737": {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x4ebcd582063a4a3a3ecd3dc5ae6cab14cc6e448ad5e06e26b258e065d571c265",
+            "puzzle_hash": "0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 668268,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633086218
+}
+```
+
+```sh
+❯ cdv inspect spendbundles ./spend_bundles/contributions-bad-but-work.json -db
+```
+
+```sh
+❯ cdv rpc coinrecords --by puzhash  6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d -ou -nd
+{}
+
+chia-piggybank on  post-5-assert-contributions [!?]
+❯ cdv rpc coinrecords --by puzhash b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd -ou -nd
+{
+    "7c2b4f7d4689571dd2a4651e7bd9b6957646c6988220474a6993e27999c45e7c": {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x86052ac34f41224c12ed2dfc41a690ab470f2a5779698d32c3a0ffacda3f6737",
+            "puzzle_hash": "0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 713274,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633931744
+    },
+    "d47c35dff3bd1f7473146b064b473a2888eff23bd4bfac19a9ea009a742e5e2b": {
+        "coin": {
+            "amount": 299,
+            "parent_coin_info": "0x12c0709babe92736387cd4ab8b4082af3aab33422fcc9cd1092ba6f6f6b01b66",
+            "puzzle_hash": "0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 690069,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633494500
+    }
+}
+
+chia-piggybank on  post-5-assert-contributions [!?]
+❯ cdv rpc coinrecords --by puzhash d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d -ou -nd
+{
+    "a39ffe19087aa846a6cb5c970a92f32366b32b7cfa2772f39005cd11b2e11a7b": {
+        "coin": {
+            "amount": 450,
+            "parent_coin_info": "0x70a721759d9d3a6a200c32ef36cc72d8cb440f5149d9d9e68f82bf97f25ecc0d",
+            "puzzle_hash": "0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 713274,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1633931744
+    }
+}
+```
 
 
 ## References
