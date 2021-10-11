@@ -552,11 +552,71 @@ Let's see the updated chialisp code:
 )
 ```
 
-#### Recursive Function
+### Recursive Function
+
+Before we try to test our new puzzles, let's look at new code. We are not expecting a value, `new_amount`, but `contribution` which is a list of contribution coin's amount. We are able to calculate `new_amount` by summing all amounts in the list, e.g., `(100 150 200)` is **450**.
+
+```lisp
+  (defun sum (contributions)
+    (if (l contributions)
+      (+ (f contributions) (sum (r contributions)))
+      0
+    )
+  )
+```
+**Chialisp** does not have `for-loop`, so, to iterate through each value in the list, we use **recursion**. We also use other recursive functions to create a list of **annoucements** and merge them with other conditions to get a final list.
+
+```lisp
+  (defun announce (contributions)
+    (if (l contributions)
+      (c 
+        (list CREATE_PUZZLE_ANNOUNCEMENT (f contributions))
+        (announce (r contributions))
+      )
+      ()
+    )
+  )
+
+  (defun merge_lists (l1 l2)
+    (if (l l1)
+        (c (f l1) (merge_lists (r l1) l2))
+        l2
+    )
+  )
+```
+
+### CLVM cost
+
+However, we also need to mind the amount of code in the puzzle. The more code we add to the puzzle, the more associated cost as all full nodes have to run more code. So we should make sure we avoid putting unnecessary code.
+
+Let's compare CLVM cost of our [new and old puzzle](compare).
+
+#### piggybank with `new_amount`
+```sh
+❯ brun (run ./piggybank.clsp -i ../include) '(100 600 0xcafef00d)' -c --time          
+cost = 3133
+assemble_from_ir: 0.025092
+to_sexp_f: 0.000356
+run_program: 0.002596
+((51 0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6 600) (51 0xcafef00d ()) (62 "approved") (72 0xcafef00d))
+```
+
+#### piggybank with `contributions`
+```sh
+❯ brun (run ./piggybank.clsp -i ../include) '(100 (100 200 200) 0xcafef00d)' -c --time
+cost = 29792
+assemble_from_ir: 0.069140
+to_sexp_f: 0.000319
+run_program: 0.021761
+((51 0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6 600) (51 0xcafef00d ()) (72 0xcafef00d) (73 100) (62 100) (62 200) (62 200))
+```
+
+We just increase the running time almost 10 fold and the puzzle is not totally secured either! :shrug:
 
 
+### ANNOUNCEMENT Gotcha!
 
-
+Let's try to break our new puzzle by contributing **150**, **200**, and two **100** mojo coins:
 
 ```sh
 ❯ python3 -i ./piggybank_drivers.py
@@ -566,7 +626,7 @@ Let's see the updated chialisp code:
 <bytes32: 6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d>
 ```
 
-##### Piggybank Coin
+#### Piggybank Coin
 ```sh
 ❯ cdv rpc coinrecords --by puzhash d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d -ou -nd
 {
@@ -585,7 +645,7 @@ Let's see the updated chialisp code:
 }
 ```
 
-##### Contribution Coins
+#### Contribution Coins
 ```sh
 ❯ cdv rpc coinrecords --by puzhash  6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d -ou -nd
 {
@@ -640,7 +700,7 @@ Let's see the updated chialisp code:
 }
 ```
 
-##### Dummy Coin
+#### Dummy Coin
 ```sh
 ❯ cdv rpc coinrecords --by puzhash b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd -ou -nd
 {
@@ -658,60 +718,190 @@ Let's see the updated chialisp code:
 }
 ```
 
+#### Spending
+
+```python
+from piggybank_drivers import *
+
+## contribution coins
+cc150 = get_coin("3bb538b58ae8c2d703f03a2ffab53a5565b36d44d3a38b94ed7fd482a9d07681")
+cc150_solution = Program.to([cc150.amount])
+cc150_spend = CoinSpend(
+    cc150,
+    CONTRIBUTION_MOD,
+    cc150_solution
+)
+
+cc200 = get_coin("5fdf91cfd695f3b7f90f3d89a9e98b950684af41c3a08c9272e8499eb157b502")
+cc200_solution = Program.to([cc200.amount])
+cc200_spend = CoinSpend(
+    cc200,
+    CONTRIBUTION_MOD,
+    cc200_solution
+)
+
+cc100_1 = get_coin("9bd47da5c7547671a7f343837f72090b93846ab714fdb8de5b915bdc6d223d7b")
+cc100_1_solution = Program.to([cc100_1.amount])
+cc100_1_spend = CoinSpend(
+    cc100_1,
+    CONTRIBUTION_MOD,
+    cc100_1_solution
+)
+
+cc100_2 = get_coin("f1676b72da59a8687afd5776d02bfb49d0b4fcdae5c0c0b6d7c987bf63013cd0")
+cc100_2_solution = Program.to([cc100_2.amount])
+cc100_2_spend = CoinSpend(
+    cc100_2,
+    CONTRIBUTION_MOD,
+    cc100_2_solution
+)
+
+
+## piggybank coin
+pc = get_coin("70a721759d9d3a6a200c32ef36cc72d8cb440f5149d9d9e68f82bf97f25ecc0d")
+pc_solution = Program.to([pc.amount, [150, 200, 100], pc.puzzle_hash])
+pc_spend = CoinSpend(
+    pc,
+    PIGGYBANK_MOD,
+    pc_solution
+)
+
+## dummy coin
+dc = get_coin("86052ac34f41224c12ed2dfc41a690ab470f2a5779698d32c3a0ffacda3f6737")
+dc_solution = Program.to([100, dc.puzzle_hash])
+dc_spend = CoinSpend(
+    dc,
+    DUMMY_MOD,
+    dc_solution
+)
+
+coin_spends = [
+    pc_spend,
+    cc150_spend, cc200_spend, cc100_1_spend, cc100_2_spend,
+    dc_spend
+]
+
+spend_bundle = SpendBundle(coin_spends, G2Element())
+```
+
+#### Inspecting The Spend Bundle
+
+Pushing the [spend bundle](spend_bundles/contributions-bad-but-work.json) doesn't give us any error as expected although we spend four contribution coins but only amount from three coins are provided to the piggybank coin's puzzle. 
+
+> **100** mojo goes to the farmer as a fee in this case, `cdv rpc blockrecords -i 713274`
+
+Inspecting the spend bundle gives us some clues. The issue is that the two **100** mojo contribution coins are asserting the same announcement, `0x8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf`. Although the piggybank coin announces only once, the condition is valid for both contribution coin. 
+
+
 ```sh
 ❯ cdv inspect spendbundles ./spend_bundles/contributions-bad-but-work.json -db
+...
+grouped conditions:
+
+  (CREATE_COIN 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d 450)
+
+  (ASSERT_MY_PUZZLEHASH 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d)
+
+  (ASSERT_MY_AMOUNT ())
+
+  (CREATE_PUZZLE_ANNOUNCEMENT 150)
+  (CREATE_PUZZLE_ANNOUNCEMENT 200)
+  (CREATE_PUZZLE_ANNOUNCEMENT 100)
+
+
+-------
+consuming coin (0x9834d182141244019b55795806dda1a5c70d4d733dfa2d9ca5b008f6eec3ba34 0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d 150)
+  with id 3bb538b58ae8c2d703f03a2ffab53a5565b36d44d3a38b94ed7fd482a9d07681
+
+
+brun -y main.sym '(a (q 4 (c 10 (c (sha256 14 5) ())) (c (c 4 (c 5 ())) ())) (c (q 73 63 . 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d) 1))' '(150)'
+
+((ASSERT_PUZZLE_ANNOUNCEMENT 0x3b0f501d6cf7aeca1c1b1e627e889afc895c7d6e511dc19e27026dd1482ca262) (ASSERT_MY_AMOUNT 150))
+
+grouped conditions:
+
+  (ASSERT_PUZZLE_ANNOUNCEMENT 0x3b0f501d6cf7aeca1c1b1e627e889afc895c7d6e511dc19e27026dd1482ca262)
+
+  (ASSERT_MY_AMOUNT 150)
+
+
+-------
+consuming coin (0x55d6ed6dac75250dba194efa1e22400c5a22ae5f0b604496c5166d05be1fd1ec 0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d 200)
+  with id 5fdf91cfd695f3b7f90f3d89a9e98b950684af41c3a08c9272e8499eb157b502
+
+
+brun -y main.sym '(a (q 4 (c 10 (c (sha256 14 5) ())) (c (c 4 (c 5 ())) ())) (c (q 73 63 . 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d) 1))' '(200)'
+
+((ASSERT_PUZZLE_ANNOUNCEMENT 0x71fb2bcd16d3354848f272cfe6567508f74911231e8abf466feba0d56376055d) (ASSERT_MY_AMOUNT 200))
+
+grouped conditions:
+
+  (ASSERT_PUZZLE_ANNOUNCEMENT 0x71fb2bcd16d3354848f272cfe6567508f74911231e8abf466feba0d56376055d)
+
+  (ASSERT_MY_AMOUNT 200)
+
+
+-------
+consuming coin (0x901b513acb9751ac2e52e46d8648f28f442711d016be9419756f4bd39e4669a5 0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d 100)
+  with id 9bd47da5c7547671a7f343837f72090b93846ab714fdb8de5b915bdc6d223d7b
+
+
+brun -y main.sym '(a (q 4 (c 10 (c (sha256 14 5) ())) (c (c 4 (c 5 ())) ())) (c (q 73 63 . 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d) 1))' '(100)'
+
+((ASSERT_PUZZLE_ANNOUNCEMENT 0x8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf) (ASSERT_MY_AMOUNT 100))
+
+grouped conditions:
+
+  (ASSERT_PUZZLE_ANNOUNCEMENT 0x8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf)
+
+  (ASSERT_MY_AMOUNT 100)
+
+
+-------
+consuming coin (0x4fad6d1eb0dedca392ca93a971271905fbe22c7638185251b13cab396b139301 0x6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d 100)
+  with id f1676b72da59a8687afd5776d02bfb49d0b4fcdae5c0c0b6d7c987bf63013cd0
+
+
+brun -y main.sym '(a (q 4 (c 10 (c (sha256 14 5) ())) (c (c 4 (c 5 ())) ())) (c (q 73 63 . 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d) 1))' '(100)'
+
+((ASSERT_PUZZLE_ANNOUNCEMENT 0x8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf) (ASSERT_MY_AMOUNT 100))
+
+grouped conditions:
+
+  (ASSERT_PUZZLE_ANNOUNCEMENT 0x8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf)
+
+  (ASSERT_MY_AMOUNT 100)
+
+
+-------
+consuming coin (0x4ebcd582063a4a3a3ecd3dc5ae6cab14cc6e448ad5e06e26b258e065d571c265 0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd 100)
+  with id 86052ac34f41224c12ed2dfc41a690ab470f2a5779698d32c3a0ffacda3f6737
+
+
+brun -y main.sym '(a (q 4 (c 2 (c 11 (c 5 ()))) ()) (c (q . 51) 1))' '(100 0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd)'
+
+((CREATE_COIN 0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd 100))
+
+grouped conditions:
+
+  (CREATE_COIN 0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd 100)
+
+
+...
+
+created  puzzle announcements = ['3b0f501d6cf7aeca1c1b1e627e889afc895c7d6e511dc19e27026dd1482ca262', '71fb2bcd16d3354848f272cfe6567508f74911231e8abf466feba0d56376055d', '8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf']
+
+asserted puzzle announcements = ['3b0f501d6cf7aeca1c1b1e627e889afc895c7d6e511dc19e27026dd1482ca262', '71fb2bcd16d3354848f272cfe6567508f74911231e8abf466feba0d56376055d', '8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf', '8b55d5d225df0f4b9c0c7b44c53b27c2c03014deb6119ff8f99119329166f4bf']
+
+symdiff of puzzle announcements = []
+...
 ```
 
-```sh
-❯ cdv rpc coinrecords --by puzhash  6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d -ou -nd
-{}
+## Conclusions
 
-chia-piggybank on  post-5-assert-contributions [!?]
-❯ cdv rpc coinrecords --by puzhash b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd -ou -nd
-{
-    "7c2b4f7d4689571dd2a4651e7bd9b6957646c6988220474a6993e27999c45e7c": {
-        "coin": {
-            "amount": 100,
-            "parent_coin_info": "0x86052ac34f41224c12ed2dfc41a690ab470f2a5779698d32c3a0ffacda3f6737",
-            "puzzle_hash": "0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"
-        },
-        "coinbase": false,
-        "confirmed_block_index": 713274,
-        "spent": false,
-        "spent_block_index": 0,
-        "timestamp": 1633931744
-    },
-    "d47c35dff3bd1f7473146b064b473a2888eff23bd4bfac19a9ea009a742e5e2b": {
-        "coin": {
-            "amount": 299,
-            "parent_coin_info": "0x12c0709babe92736387cd4ab8b4082af3aab33422fcc9cd1092ba6f6f6b01b66",
-            "puzzle_hash": "0xb92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd"
-        },
-        "coinbase": false,
-        "confirmed_block_index": 690069,
-        "spent": false,
-        "spent_block_index": 0,
-        "timestamp": 1633494500
-    }
-}
+We have seen how our coins are still not secure and been trying to secure our coins by using `ASSERT_MY_AMOUNT` and `ASSERT_MY_PUZZLEHASH`. However, we still could not figure out how to check the `new_amount` even though we have code that increases 10x of the CLVM costs.
 
-chia-piggybank on  post-5-assert-contributions [!?]
-❯ cdv rpc coinrecords --by puzhash d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d -ou -nd
-{
-    "a39ffe19087aa846a6cb5c970a92f32366b32b7cfa2772f39005cd11b2e11a7b": {
-        "coin": {
-            "amount": 450,
-            "parent_coin_info": "0x70a721759d9d3a6a200c32ef36cc72d8cb440f5149d9d9e68f82bf97f25ecc0d",
-            "puzzle_hash": "0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d"
-        },
-        "coinbase": false,
-        "confirmed_block_index": 713274,
-        "spent": false,
-        "spent_block_index": 0,
-        "timestamp": 1633931744
-    }
-}
-```
+...
 
 
 ## References
