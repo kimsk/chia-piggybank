@@ -589,7 +589,7 @@ Before we try to test our new puzzles, let's look at new code. We are not expect
 
 However, we also need to mind the amount of code in the puzzle. The more code we add to the puzzle, the more associated cost as all full nodes have to run more code. So we should make sure we avoid putting unnecessary code.
 
-Let's compare CLVM cost of our [new and old puzzle](compare).
+Let's compare CLVM cost of our [new and old puzzle](https://github.com/kimsk/chia-piggybank/commit/cf4b3b18ff80e777fa9cca36a24d728985b90429#diff-1aac05a82431cbcd8a6462c03805dc01b56db6b624a0e505e25ed42de5df32e4).
 
 #### piggybank with `new_amount`
 ```sh
