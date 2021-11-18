@@ -36,3 +36,5 @@ assert(verify1)
 assert(verify2)
 assert(verify3)
 assert(agg_verify)
+
+# https://github.com/Chia-Network/bls-signatures/blob/0dfd8b6415670608d60523fb4de3022d8c676096/python-bindings/test.py#L43
