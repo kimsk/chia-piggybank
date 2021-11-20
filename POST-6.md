@@ -353,6 +353,111 @@ If we change any value in the solution after we sign them, the aggregated signat
 
 ### AGG_SIG_ME
 
+However, we still have one more issue. `AGG_SIG_UNSAFE` condition forces the aggregated signature to be verified. However, anyone can see the aggregated signature inside the spend bundle and can reuse them. Let's see how this can be an issue.
+
+Let's say we have two dummy coins with the amount of 100 and 200 mojos respectively.
+
+```sh
+❯ cdv rpc coinrecords --by puzhash dfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82 -nd
+{
+    "5c6e36370def3d8bd306cf22b45e830cc9e0b960aa4aa90e86992e17824dec9b": {
+        "coin": {
+            "amount": 100,
+            "parent_coin_info": "0x09853c6417613bb7b6695786324562f49fbd5f2371543a7b28d448a1cd24ee09",
+            "puzzle_hash": "0xdfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 893977,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1637361141
+    },
+    "8b90314f94e6ebe3ef897ae65345973b1304e5dd0164f0f2fa81edffe0796122": {
+        "coin": {
+            "amount": 200,
+            "parent_coin_info": "0x8346434a36ea7c16b6b93a99f6337f3bbee4ff1c5c0b9396a44fa1833a78c916",
+            "puzzle_hash": "0xdfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 894442,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1637372362
+    }
+}
+```
+
+An authorized user can spend the 100-mojo one (coin id: `5c6e36370def3d8bd306cf22b45e830cc9e0b960aa4aa90e86992e17824dec9b`) because the valid aggregated signature can be provided.
+
+Since the spent bundle can be read by anyone, a bad actor could figure out that the puzzle has only a `AGG_SIG_UNSAFE` condition. With that information, the bad actor can try to reuse the same aggregrated signature with any coins with the same puzzle hash.
+
+```json
+// 100-mojo spend bundle
+{
+    "aggregated_signature": "0x90794166e5da9ac7e72391cad930825e017f2764f507fca01d1b912b8af9f07d3f1cf491ecf3577eccdeba2f0bc66c1a0ef0b68e6cd6e6258e4cc3cec13f5a380022c386f21dd96b77894b875f6c820a6dea2efc016e4690c2bd15bf43236736",
+    "coin_spends": [
+        {
+            "coin": {
+                "amount": 100,
+                "parent_coin_info": "0x09853c6417613bb7b6695786324562f49fbd5f2371543a7b28d448a1cd24ee09",
+                "puzzle_hash": "0xdfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ff0bffff04ff05ff80808080ffff04ffff04ff04ffff04ff0effff04ffff0bff05ff0b80ff80808080ff808080ffff04ffff01ff31ff33b0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xff64ffa0ca13bc2f475ba97fcaed9419e70c8d9350fbe1684ceb36935ad266a8e49fce0380"
+        }
+    ]
+}
+```
+
+The bad actor create a new 200-mojo spend budle with 100-mojo signature and solution. In this case, the 200-mojo dummy coin is spent and a farmer gets 100 mojos as fees. 
+
+```json
+// 200-mojo spend bundle with 100-mojo signature and 100-mojo solution
+{
+    "aggregated_signature": "0x90794166e5da9ac7e72391cad930825e017f2764f507fca01d1b912b8af9f07d3f1cf491ecf3577eccdeba2f0bc66c1a0ef0b68e6cd6e6258e4cc3cec13f5a380022c386f21dd96b77894b875f6c820a6dea2efc016e4690c2bd15bf43236736",
+    "coin_spends": [
+        {
+            "coin": {
+                "amount": 200,
+                "parent_coin_info": "0x8346434a36ea7c16b6b93a99f6337f3bbee4ff1c5c0b9396a44fa1833a78c916",
+                "puzzle_hash": "0xdfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ff0bffff04ff05ff80808080ffff04ffff04ff04ffff04ff0effff04ffff0bff05ff0b80ff80808080ff808080ffff04ffff01ff31ff33b0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xff64ffa0ca13bc2f475ba97fcaed9419e70c8d9350fbe1684ceb36935ad266a8e49fce0380"
+        }
+    ]
+}
+```
+```sh
+❯ cdv rpc coinrecords --by id 8b90314f94e6ebe3ef897ae65345973b1304e5dd0164f0f2fa81edffe0796122
+[
+    {
+        "coin": {
+            "amount": 200,
+            "parent_coin_info": "0x8346434a36ea7c16b6b93a99f6337f3bbee4ff1c5c0b9396a44fa1833a78c916",
+            "puzzle_hash": "0xdfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 894442,
+        "spent": true,
+        "spent_block_index": 894562,
+        "timestamp": 1637372362
+    }
+]
+
+~
+❯ cdv rpc blockrecords -i 894562
+{
+    ...
+    "fees": 100,
+    ...
+    "header_hash": "0xbe427ab1eae0b9a5ec735a080e330ea2f8e22972a621e68416c47fe17d1670f0",
+    "height": 894562,
+    ...
+}
+```
+
+
 ## Conclusions
 
 We can now make sure that our coin can be spent only if the aggregated signature is valid.
