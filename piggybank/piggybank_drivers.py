@@ -121,7 +121,7 @@ def deploy_smart_coin(mod: Program, amount: uint64):
     treehash = mod.get_tree_hash()
     # cdv encode
     address = encode_puzzle_hash(treehash, "txch")
-    coin = send_money(amount, address)
+    coin = send_money(amount, address, 50_000_000)
     elapsed = time.perf_counter() - s
     print(f"deploy smart coin with {amount} mojos to {treehash} in {elapsed:0.2f} seconds.")
     print(f"coin_id: {coin.get_hash().hex()}")

@@ -389,7 +389,7 @@ Let's say we have two dummy coins with the amount of 100 and 200 mojos respectiv
 
 An authorized user can spend the 100-mojo one (coin id: `5c6e36370def3d8bd306cf22b45e830cc9e0b960aa4aa90e86992e17824dec9b`) because the valid aggregated signature can be provided.
 
-Since the spent bundle can be read by anyone, a bad actor could figure out that the puzzle has only a `AGG_SIG_UNSAFE` condition. With that information, the bad actor can try to reuse the same aggregrated signature with any coins with the same puzzle hash.
+Since the spent bundle can be read by anyone (full can read any active [transactions](https://github.com/Chia-Network/offline-signing-demo#transactions) with an aggregated key before the coin was spent), a bad actor could figure out that the puzzle has only a `AGG_SIG_UNSAFE` condition. With that information, the bad actor can try to reuse the same aggregrated signature with any coins with the same puzzle hash.
 
 ```json
 // 100-mojo spend bundle
@@ -456,16 +456,69 @@ The bad actor create a new 200-mojo spend budle with 100-mojo signature and solu
     ...
 }
 ```
+This issue is called [replay attacks](https://chialisp.com/docs/security#replay-attacks). Fortunately, chia provides and strongly recommends `AGG_SIG_ME` which will verify signature of our message concatenated with coin id and the network's genesis challenge behind the scene. 
+
+```lisp
+# c8c5fa8c19fdf767a779e3fd86ee759df7d8cd5c425bccf163e2b34405e8fc13
+(mod (
+        new_amount
+        puzzle_hash
+     )
+
+    (include condition_codes.clib)
+    (defconstant PUBKEY 0xa0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1)
+
+    (list
+        (list CREATE_COIN puzzle_hash new_amount)
+        (list AGG_SIG_ME PUBKEY (sha256 new_amount puzzle_hash))
+    )
+)
+```
+
+We just need to replace `AGG_SIG_UNSAFE` with `AGG_SIG_ME` in our chialisp code. To sign, we will need to concatenate **coin id** and the `GENESIS_CHALLENGE` of the blockchain.
+
+_However, we have to use mainnet's GENESIS_CHALLENGE even we are using `testnet7` because of the issue explained [here](keybase://chat/chia_network.public#chialisp/7288)_
+
+```python
+...
+sig: G2Element = AugSchemeMPL.sign(sk,
+                    message
+                    + dc.name()
+                    # mainnet's GENESIS_CHALLENGE
+                    + DEFAULT_CONSTANTS.AGG_SIG_ME_ADDITIONAL_DATA
+                )
+...
+```
+
+Here is the spend bundle for 100 million mojos!:
+```json
+{
+    "aggregated_signature": "0x9357cffbb9fe0831e6c9b2bb78df7423d2c1a10f15990eae4e217f8a38d7505962cda14ebbc3c27d4dc235d70d36ab2105957aee1d5449bb444aa854de9dbe1e18d9e33abe14d52f1bfde1f845cec0e337446ac16c906416043f3b3f2bb75424",
+    "coin_spends": [
+        {
+            "coin": {
+                "amount": 100000000,
+                "parent_coin_info": "0xde02d8bc69f3bc158244d7c1be55027f3f7d25a4e5b1f3fbd99f8424b4cfd6ec",
+                "puzzle_hash": "0xc8c5fa8c19fdf767a779e3fd86ee759df7d8cd5c425bccf163e2b34405e8fc13"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ff0bffff04ff05ff80808080ffff04ffff04ff04ffff04ff0effff04ffff0bff05ff0b80ff80808080ff808080ffff04ffff01ff32ff33b0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xff8405f5e100ffa0ca13bc2f475ba97fcaed9419e70c8d9350fbe1684ceb36935ad266a8e49fce0380"
+        }
+    ]
+}
+```
+
+Since the coin id is included (signed) in the signature, we can't use the same signature to spend other dummy coins like in the `AGG_SIG_UNSAFE` case.
 
 
 ## Conclusions
 
-We can now make sure that our coin can be spent only if the aggregated signature is valid.
-
+By using `AGG_SIG_ME`, we can now make sure that our coin can be spent only by the secret key's owner, the solution values won't be modified by someone else, and the aggregated signature can't be reused. In the next post, we will apply what we learn here with the piggybank and contribution coins.
 
 ## References
 - [chialisp.com | 2 - Coins, Spends and Wallets](https://chialisp.com/docs/coins_spends_and_wallets#bls-aggregated-signatures)
 - [chialsip.com | 8 - Security](https://chialisp.com/docs/security)
+- [Chia-Network/offline-signing-demo](https://github.com/Chia-Network/offline-signing-demo)
 - [tutorial | 4 - Securing a Smart Coin](https://youtu.be/_SBGfMZhRd8)
 - [High Level Tips 1 - Managing State, Coin Creation, Announcements](https://www.youtube.com/watch?v=lDXB4NlbQ-E)
 - [High Level Tips 2 - Security, Checking Arguments & Signatures](https://www.youtube.com/watch?v=T4noZyNJkFA)

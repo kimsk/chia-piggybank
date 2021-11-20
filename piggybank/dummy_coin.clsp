@@ -8,6 +8,6 @@
 
     (list
         (list CREATE_COIN puzzle_hash new_amount)
-        (list AGG_SIG_UNSAFE PUBKEY (sha256 new_amount puzzle_hash))
+        (list AGG_SIG_ME PUBKEY (sha256 new_amount puzzle_hash))
     )
 )
