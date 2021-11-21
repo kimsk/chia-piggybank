@@ -3,9 +3,11 @@
         puzzle_hash
      )
 
-  (include condition_codes.clib)
+    (include condition_codes.clib)
+    (defconstant PUBKEY 0xa0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1)
 
     (list
         (list CREATE_COIN puzzle_hash new_amount)
+        (list AGG_SIG_ME PUBKEY (sha256 new_amount puzzle_hash))
     )
 )
