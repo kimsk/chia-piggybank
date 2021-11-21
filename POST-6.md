@@ -389,7 +389,7 @@ Let's say we have two dummy coins with the amount of 100 and 200 mojos respectiv
 
 An authorized user can spend the 100-mojo one (coin id: `5c6e36370def3d8bd306cf22b45e830cc9e0b960aa4aa90e86992e17824dec9b`) because the valid aggregated signature can be provided.
 
-Since the spent bundle can be read by anyone (full can read any active [transactions](https://github.com/Chia-Network/offline-signing-demo#transactions) with an aggregated key before the coin was spent), a bad actor could figure out that the puzzle has only a `AGG_SIG_UNSAFE` condition. With that information, the bad actor can try to reuse the same aggregrated signature with any coins with the same puzzle hash.
+Since the spent bundle can be read by anyone (any full node can read any active [transactions](https://github.com/Chia-Network/offline-signing-demo#transactions) with an aggregated key before the coin was spent), a bad actor could figure out that the puzzle has only a `AGG_SIG_UNSAFE` condition. With that information, the bad actor can try to reuse the same aggregrated signature with any coins with the same puzzle hash.
 
 ```json
 // 100-mojo spend bundle
@@ -477,7 +477,7 @@ This issue is called [replay attacks](https://chialisp.com/docs/security#replay-
 
 We just need to replace `AGG_SIG_UNSAFE` with `AGG_SIG_ME` in our chialisp code. To sign, we will need to concatenate **coin id** and the `GENESIS_CHALLENGE` of the blockchain.
 
-_However, we have to use mainnet's GENESIS_CHALLENGE even we are using `testnet7` because of the issue explained [here](keybase://chat/chia_network.public#chialisp/7288)_
+_However, we have to use mainnet's GENESIS_CHALLENGE even we are using `testnet7` because of the issue explained in keybase://chat/chia_network.public#chialisp/7288_
 
 ```python
 ...
