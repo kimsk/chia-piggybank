@@ -1,0 +1,41 @@
+{
+    "aggregated_signature": "0x8143ed61dfac1bd90c29d4d12a7b9f77b56e195f4cb6acf67c36fd341093d7946af284e9a1b5052f340fdf052f7a51ea02c87ef4425d24a124d00c140c35c2cff4b6b8903b83b6121f042c61a47a47c9d6b8bb9dd297c63616c9b90ef0390703",
+    "coin_spends": [
+        {
+            "coin": {
+                "amount": 0,
+                "parent_coin_info": "0x760f612304a5eb627081632a3c94ef7d4a1aeeaf31e2a29047a6aacb40c0da7b",
+                "puzzle_hash": "0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d"
+            },
+            "puzzle_reveal": "0xff02ffff01ff02ffff03ffff15ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff0580ffff01ff02ffff03ffff15ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff1a80ffff01ff02ff2effff04ff02ffff04ffff04ffff04ff1cffff04ff14ffff04ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff80808080ffff04ffff04ff1cffff04ff17ffff01ff80808080ffff04ffff04ff18ffff04ff17ff808080ffff04ffff04ff10ffff04ff05ff808080ff8080808080ffff04ffff02ff16ffff04ff02ffff04ff0bff80808080ff8080808080ffff01ff02ff2effff04ff02ffff04ffff04ffff04ff1cffff04ff17ffff04ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff80808080ffff04ffff04ff18ffff04ff17ff808080ffff04ffff04ff10ffff04ff05ff808080ff80808080ffff04ffff02ff16ffff04ff02ffff04ff0bff80808080ff808080808080ff0180ffff01ff088080ff0180ffff04ffff01ffffff4948ffa0a6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e633ffff3e8201f4ffff02ffff03ffff07ff0580ffff01ff04ffff04ff12ffff04ff09ff808080ffff02ff16ffff04ff02ffff04ff0dff8080808080ff8080ff0180ffff02ffff03ffff07ff0580ffff01ff04ff09ffff02ff2effff04ff02ffff04ff0dffff04ff0bff808080808080ffff010b80ff0180ff02ffff03ffff07ff0580ffff01ff10ff09ffff02ff3effff04ff02ffff04ff0dff8080808080ff8080ff0180ff018080",
+            "solution": "0xff80ffff8405f5e100ff8411e1a30080ffa0d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d80"
+        },
+        {
+            "coin": {
+                "amount": 100000000,
+                "parent_coin_info": "0x4b32bb0a40580f05b601165641d5713334add92e4474294293cb2d52d0653442",
+                "puzzle_hash": "0xbd21ffef9bba7064f842a1f62601bdf6016f45f9d9e5ef4bbbc0263151642bf1"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ffff0bff16ff0580ff808080ffff04ffff04ff0cffff04ff05ff808080ffff04ffff04ff08ffff04ff1effff04ffff0bff0580ff80808080ff80808080ffff04ffff01ffff3249ff3fffa0d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410db0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xff8405f5e10080"
+        },
+        {
+            "coin": {
+                "amount": 300000000,
+                "parent_coin_info": "0x65133f8b02e56d24e4a551ecf10de2b2bc2bcc9c4a0d59fd82b48062a1ab59f7",
+                "puzzle_hash": "0xbd21ffef9bba7064f842a1f62601bdf6016f45f9d9e5ef4bbbc0263151642bf1"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ffff0bff16ff0580ff808080ffff04ffff04ff0cffff04ff05ff808080ffff04ffff04ff08ffff04ff1effff04ffff0bff0580ff80808080ff80808080ffff04ffff01ffff3249ff3fffa0d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410db0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xff8411e1a30080"
+        },
+        {
+            "coin": {
+                "amount": 100000000,
+                "parent_coin_info": "0x224cec5387bd032fd0cf5daf8bbf888b18af2af878f2a417f5733ddc681cda1a",
+                "puzzle_hash": "0xbd21ffef9bba7064f842a1f62601bdf6016f45f9d9e5ef4bbbc0263151642bf1"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ffff0bff16ff0580ff808080ffff04ffff04ff0cffff04ff05ff808080ffff04ffff04ff08ffff04ff1effff04ffff0bff0580ff80808080ff80808080ffff04ffff01ffff3249ff3fffa0d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410db0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xff8405f5e10080"
+        }
+    ]
+}
