@@ -34,11 +34,13 @@ PIGGYBANK_MOD = load_clvm("piggybank.clsp", package_or_requirement=__name__, sea
 # e6b571b019744c25e599c0f63593c4003b025c8f437c695b422b13d09bec9107 | w/ ASSERT_PUZZLE_ANNOUNCEMENT
 # 8b198e66bc96c121341ca38b995af1dcd7e56b10d13fc5b809d38fd7274b2155 | w/ new piggybank puzzle hash with ASSERT_MY_PUZZLEHASH
 # 6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d | w/ ASSERT_PUZZLE_ANNOUNCEMENT my_amount
+# bd21ffef9bba7064f842a1f62601bdf6016f45f9d9e5ef4bbbc0263151642bf1 | w/ AGG_SIG_ME (sha256 my_amount)
 CONTRIBUTION_MOD = load_clvm("contribution.clsp", package_or_requirement=__name__, search_paths=["../include"])
 
 # b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd
-# 32632a65eda0d8964cf7a25c900d1545260c544727c128e99aa9074d7992c05e
-# dfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82
+# 32632a65eda0d8964cf7a25c900d1545260c544727c128e99aa9074d7992c05e | w/ AGG_SIG_UNSAFE PUBKEY "hello chia"
+# dfa1bf8b5e100c5b4ebe22f8f534a4d844dfff26eb74cb24809df8c86e78ab82 | w/ AGG_SIG_UNSAFE PUBKEY (sha256 new_amount puzzle_hash))
+# c8c5fa8c19fdf767a779e3fd86ee759df7d8cd5c425bccf163e2b34405e8fc13 | w/ AGG_SIG_ME PUBKEY (sha256 new_amount puzzle_hash))
 DUMMY_MOD = load_clvm("dummy_coin.clsp", package_or_requirement=__name__, search_paths=["../include"])
 
 # config/config.yaml

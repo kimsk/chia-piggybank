@@ -6,6 +6,7 @@ This is my walkthrough of the [coin lifecycle and testing tutorials](https://chi
 - [Securing Piggybank Coin | ANNOUCEMENT](POST-4.md)
 - [Securing Piggybank Coin | ASSERT_MY_*](POST-5.md)
 - [Aggregated Signature | AIG_SIG_*](POST-6.md)
+- [Securing Piggybank Coin | AGG_SIG_ME](POST-7.md)
 - TBA
 
 
