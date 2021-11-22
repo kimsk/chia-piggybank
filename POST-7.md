@@ -134,7 +134,7 @@ spend_bundle = SpendBundle(coin_spends, sig)
 print_json(spend_bundle.to_json_dict(include_legacy_keys = False, exclude_modern_keys = False))
 ```
 
-``json
+```json
 {
     "aggregated_signature": "0x935a4f17ac0a89d891e585b9c307c18f9cf447ed0a72f8abe8fe7c95973058463f6b5f12109e4b12a2db83d6d7bf045f0a86b9ece04a15d9832e5eb9049f16077eabb4cf3819498ad86c39ae38bb151891389dcff1053a4bfc844f09e79be596",
     "coin_spends": [
@@ -585,6 +585,6 @@ a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba
 
 As we can see, it still doesn't solve the annoucement issue.
 
-## Conclusion
+## Conclusions
 
 Now our contribution coins can only be spent by a user with a designated secret key. Next post, we will try to resolve the annoucement issue by including coin id in the message.
