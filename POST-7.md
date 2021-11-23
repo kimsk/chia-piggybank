@@ -22,7 +22,7 @@ Let's look at the chialisp code:
 )
 ```
 
-To tie contribution coin(s) with a piggybank coin, we use **ANNOUCEMENT**. And we use `ASSERT_MY_AMOUNT` to make sure that the `my_amount` in the announcement is the same as the amount of the contribution coin itself.
+To tie contribution coin(s) with a piggybank coin, we use **ANNOUNCEMENT**. And we use `ASSERT_MY_AMOUNT` to make sure that the `my_amount` in the announcement is the same as the amount of the contribution coin itself.
 
 ## Add AGG_SIG_ME Condition To Contribution Coin
 
@@ -298,7 +298,7 @@ The example above shows two contribution coins with the amount of 100 and 200 mi
 ]
 ```
 
-## ANNOUCEMENT issue
+## ANNOUNCEMENT issue
 
 In the previous post, we have the [announcement issue](https://github.com/kimsk/chia-piggybank/blob/main/POST-5.md#announcement-gotcha). Adding `AGG_SIG_ME` also resolve the problem.
 
@@ -583,8 +583,8 @@ a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba
 }
 ```
 
-As we can see, it still doesn't solve the annoucement issue.
+As we can see, it still doesn't solve the announcement issue.
 
 ## Conclusions
 
-Now our contribution coins can only be spent by a user with a designated secret key. Next post, we will try to resolve the annoucement issue by including coin id in the message.
+Now our contribution coins can only be spent by a user with a designated secret key. Next post, we will try to resolve the announcement issue by including coin id in the message.

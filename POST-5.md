@@ -1,6 +1,6 @@
 # Securing Piggybank Coin (ASSERT_MY_*)
 
-In the [last post](POST-4.md), we are able to guarantee that our contribution coins have to be spent together with our designated piggybank coin by aseerting puzzle annoucement.
+In the [last post](POST-4.md), we are able to guarantee that our contribution coins have to be spent together with our designated piggybank coin by aseerting puzzle announcement.
 
 However, the existing piggybank coin still has issues allowing bad actors to steal our mojos. Let's look at those issues together:
 
@@ -457,7 +457,7 @@ Let's check all of our coins again after the spend bundle is processed:
 
 We can see that the piggybank and contribution coins are gone and the new dummy coin has all mojos.
 
-### Use ASSERT_PUZZLE_ANNOUCEMENT To Assert Contribution Coin's `my_amount`
+### Use ASSERT_PUZZLE_ANNOUNCEMENT To Assert Contribution Coin's `my_amount`
 
 Let's see if we can add more **assertions** to address the security issue by the followings:
 
@@ -564,7 +564,7 @@ Before we try to test our new puzzles, let's look at new code. We are not expect
     )
   )
 ```
-**Chialisp** does not have `for-loop`, so, to iterate through each value in the list, we use **recursion**. We also use other recursive functions to create a list of **annoucements** and merge them with other conditions to get a final list.
+**Chialisp** does not have `for-loop`, so, to iterate through each value in the list, we use **recursion**. We also use other recursive functions to create a list of **announcements** and merge them with other conditions to get a final list.
 
 ```lisp
   (defun announce (contributions)
@@ -899,7 +899,7 @@ symdiff of puzzle announcements = []
 
 ## Conclusions
 
-We have been trying to secure our coins by using `ASSERT_MY_AMOUNT` and `ASSERT_MY_PUZZLEHASH`. Also we try to verify the contribution coin amount by using **annoucement**. However, our coins are still not secure and bad actors can still steal our contribution coins even though we have code that increases the CLVM costs by 10x.
+We have been trying to secure our coins by using `ASSERT_MY_AMOUNT` and `ASSERT_MY_PUZZLEHASH`. Also we try to verify the contribution coin amount by using **announcement**. However, our coins are still not secure and bad actors can still steal our contribution coins even though we have code that increases the CLVM costs by 10x.
 
 ## References
 
