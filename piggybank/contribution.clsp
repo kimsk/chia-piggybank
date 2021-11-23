@@ -1,13 +1,14 @@
-(mod (my_amount)
+(mod (my_coin_id my_amount)
 
     (include condition_codes.clib)
 
-    (defconstant PIGGYBANK_PUZZLE_HASH 0xd02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d)
+    (defconstant PIGGYBANK_PUZZLE_HASH 0x7383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257)
     (defconstant PUBKEY 0xa0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1)
 
     (list
-        (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 PIGGYBANK_PUZZLE_HASH my_amount))
+        (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 PIGGYBANK_PUZZLE_HASH (sha256 my_coin_id my_amount)))
         (list ASSERT_MY_AMOUNT my_amount)
+        (list ASSERT_MY_COIN_ID my_coin_id)
         (list AGG_SIG_ME PUBKEY (sha256 my_amount))
     )
 )
