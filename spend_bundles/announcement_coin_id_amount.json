@@ -1,0 +1,41 @@
+{
+    "aggregated_signature": "0x92d621c049444b171dd35fec1cd100287169f53f2ed269deea4455466f8e88c0d78a4f50844f7645f93e67118026afe90f92f45ffd1f84c3fe792b439d01c7b8b9cbdb7e124b97c9d43bd76a44155b7c5fdeedb1b4a798cb7e50ca01ea5f37b4",
+    "coin_spends": [
+        {
+            "coin": {
+                "amount": 0,
+                "parent_coin_info": "0xc695baf841458c9b1646f337ac78b84921fe10f115a01f32dcd0094c72732ad5",
+                "puzzle_hash": "0x7383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257"
+            },
+            "puzzle_reveal": "0xff02ffff01ff02ffff03ffff15ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff0580ffff01ff02ffff03ffff15ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff1a80ffff01ff02ff2effff04ff02ffff04ffff04ffff04ff1cffff04ff14ffff04ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff80808080ffff04ffff04ff1cffff04ff17ffff01ff80808080ffff04ffff04ff18ffff04ff17ff808080ffff04ffff04ff10ffff04ff05ff808080ff8080808080ffff04ffff02ff16ffff04ff02ffff04ff0bff80808080ff8080808080ffff01ff02ff2effff04ff02ffff04ffff04ffff04ff1cffff04ff17ffff04ffff10ff05ffff02ff3effff04ff02ffff04ff0bff8080808080ff80808080ffff04ffff04ff18ffff04ff17ff808080ffff04ffff04ff10ffff04ff05ff808080ff80808080ffff04ffff02ff16ffff04ff02ffff04ff0bff80808080ff808080808080ff0180ffff01ff088080ff0180ffff04ffff01ffffff4948ffa0a6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e633ffff3e8201f4ffff02ffff03ffff07ff0580ffff01ff04ffff04ff12ffff04ffff0bff11ff2980ff808080ffff02ff16ffff04ff02ffff04ff0dff8080808080ff8080ff0180ffff02ffff03ffff07ff0580ffff01ff04ff09ffff02ff2effff04ff02ffff04ff0dffff04ff0bff808080808080ffff010b80ff0180ff02ffff03ffff07ff0580ffff01ff10ff29ffff02ff3effff04ff02ffff04ff0dff8080808080ff8080ff0180ff018080",
+            "solution": "0xff80ffffffa0ab800c725ee21f1afc180793270df17e8b2b6c98395d29b534cc22d476a18cebff8405f5e10080ffffa046564cec8e013310b4deee4d357c873a8d642bc807dafac165d3c2045fe06680ff8411e1a30080ffffa094115a9ec073588f67c997c785609077256fe1ce9e3ecbdabfe8576e50bcbaa3ff8405f5e1008080ffa07383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a425780"
+        },
+        {
+            "coin": {
+                "amount": 100000000,
+                "parent_coin_info": "0xe79a1bb610b98934dc1a040ec35f547d90b66fd61fd2bc268916670aa37957a8",
+                "puzzle_hash": "0x1b09eef0781c9587b167d99a7c4730746735a19b893fd3f53e5bc890454c540e"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ffff0bff16ffff0bff05ff0b8080ff808080ffff04ffff04ff14ffff04ff0bff808080ffff04ffff04ff1cffff04ff05ff808080ffff04ffff04ff08ffff04ff1effff04ffff0bff0b80ff80808080ff8080808080ffff04ffff01ffff32ff4946ff3fffa07383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257b0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xffa0ab800c725ee21f1afc180793270df17e8b2b6c98395d29b534cc22d476a18cebff8405f5e10080"
+        },
+        {
+            "coin": {
+                "amount": 300000000,
+                "parent_coin_info": "0x51389c474ae9843e0acd2b4f02d6e9fa1b0a66985e8f3cc3b02e2d59a75cb418",
+                "puzzle_hash": "0x1b09eef0781c9587b167d99a7c4730746735a19b893fd3f53e5bc890454c540e"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ffff0bff16ffff0bff05ff0b8080ff808080ffff04ffff04ff14ffff04ff0bff808080ffff04ffff04ff1cffff04ff05ff808080ffff04ffff04ff08ffff04ff1effff04ffff0bff0b80ff80808080ff8080808080ffff04ffff01ffff32ff4946ff3fffa07383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257b0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xffa046564cec8e013310b4deee4d357c873a8d642bc807dafac165d3c2045fe06680ff8411e1a30080"
+        },
+        {
+            "coin": {
+                "amount": 100000000,
+                "parent_coin_info": "0x721e1b4ac3d39234735d42d3b03194c0ba15b0c4a86f3724ba4de9c5b2aa5810",
+                "puzzle_hash": "0x1b09eef0781c9587b167d99a7c4730746735a19b893fd3f53e5bc890454c540e"
+            },
+            "puzzle_reveal": "0xff02ffff01ff04ffff04ff0affff04ffff0bff16ffff0bff05ff0b8080ff808080ffff04ffff04ff14ffff04ff0bff808080ffff04ffff04ff1cffff04ff05ff808080ffff04ffff04ff08ffff04ff1effff04ffff0bff0b80ff80808080ff8080808080ffff04ffff01ffff32ff4946ff3fffa07383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257b0a0f10c708a8ef327c117fbf2676ed2c19e6d4c05e1d731fed759760f5a3be8d0372780025d7d8fba008bef49ef61a6f1ff018080",
+            "solution": "0xffa094115a9ec073588f67c997c785609077256fe1ce9e3ecbdabfe8576e50bcbaa3ff8405f5e10080"
+        }
+    ]
+}

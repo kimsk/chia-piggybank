@@ -1,5 +1,6 @@
 (mod (
         my_amount
+        ; ((coin_id coin_amount) ...)
         contributions
         my_puzzlehash
      )
@@ -11,7 +12,7 @@
 
   (defun sum (contributions)
     (if (l contributions)
-      (+ (f contributions) (sum (r contributions)))
+      (+ (f (r (f contributions))) (sum (r contributions)))
       0
     )
   )
@@ -19,7 +20,7 @@
   (defun announce (contributions)
     (if (l contributions)
       (c 
-        (list CREATE_PUZZLE_ANNOUNCEMENT (f contributions))
+        (list CREATE_PUZZLE_ANNOUNCEMENT (sha256 (f (f contributions)) (f (r (f contributions)))))
         (announce (r contributions))
       )
       ()
