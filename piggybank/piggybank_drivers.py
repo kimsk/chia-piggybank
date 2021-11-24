@@ -28,6 +28,7 @@ def print_json(dict):
 # 5c3eba97e05cf431f74f722998c1b8e312d125df49c2e7ecded81e3b830e8f64 | w/ CREATE_PUZZLE_ANNOUNCEMENT
 # 2e2546cae60daa0ddfd948bf1d3b783c6fad278e4b5c96b2ad60119807ef2ea7 | w/ ASSERT_MY_PUZZLEHASH
 # d02db06d715c2b44ee1945ab7950996b220808e178e7122f71b316d0e2f7410d | w/ CREATE_PUZZLE_ANNOUNCEMENT for contribution coins
+# 7383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257 | w/ CREATE_PUZZLE_ANNOUNCEMENT (sha256 coin_id amount)
 PIGGYBANK_MOD = load_clvm("piggybank.clsp", package_or_requirement=__name__, search_paths=["../include"])
 
 # 4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a | original
@@ -35,6 +36,7 @@ PIGGYBANK_MOD = load_clvm("piggybank.clsp", package_or_requirement=__name__, sea
 # 8b198e66bc96c121341ca38b995af1dcd7e56b10d13fc5b809d38fd7274b2155 | w/ new piggybank puzzle hash with ASSERT_MY_PUZZLEHASH
 # 6aae6f4638981ba070d1f4b7ba5fa091ccec531369165ffe222aa868816a695d | w/ ASSERT_PUZZLE_ANNOUNCEMENT my_amount
 # bd21ffef9bba7064f842a1f62601bdf6016f45f9d9e5ef4bbbc0263151642bf1 | w/ AGG_SIG_ME (sha256 my_amount)
+# 1b09eef0781c9587b167d99a7c4730746735a19b893fd3f53e5bc890454c540e | w/ ASSERT_PUZZLE_ANNOUNCEMENT my_coin_id my_amount
 CONTRIBUTION_MOD = load_clvm("contribution.clsp", package_or_requirement=__name__, search_paths=["../include"])
 
 # b92a9d42c0f3e3612e98e1ae7b030ed425e076eda6238c7df3c481bf13de3bfd

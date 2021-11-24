@@ -177,15 +177,67 @@ However, even the announcement requirement are met, we still can't spend the bun
 ("{'error': 'Failed to include transaction "
  'ab9193f1d509a99098213f5d2f17b66881bcd3d0fbc0d5f02ea34d2d9652605f, error '
  "INVALID_FEE_TOO_CLOSE_TO_ZERO', 'success': False}")
+
+ ❯ cdv rpc mempool --ids-only | ConvertFrom-Json | measure | select Count
+
+Count
+-----
+ 7167
 ```
 
+This happened when there were a lot of transactions in the [mempool]((https://github.com/Chia-Network/chia-blockchain/blob/main/chia/full_node/mempool_manager.py#L386)).
 
+Once the mempool has less number of transactions, everything works as expected.
 
 ```sh
-brun (run ./piggybank.clsp -i ../include) '(100 (100 200 200) 
+❯ cdv rpc mempool --ids-only | ConvertFrom-Json | measure | select Count
+
+Count
+-----
+    2
+
+❯ cdv rpc pushtx ./announcement_coin_id_amount.json                                    
+{
+    "status": "SUCCESS",
+    "success": true
+}
+
+❯ cdv rpc coinrecords --by puzhash 0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6 -o
+u -nd
+{
+    "0dbc92533f138d524a2da502a09c62d86129ad7a28d471acad7be745d3d71895": {
+        "coin": {
+            "amount": 500000000,
+            "parent_coin_info": "0x74122f64aea8c9addd228d6d8096bb7353fb895dc77e9794d6ee71529211d169",
+            "puzzle_hash": "0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6"
+        },
+        "coinbase": false,
+        "confirmed_block_index": 916681,
+        "spent": false,
+        "spent_block_index": 0,
+        "timestamp": 1637795221
+    },
 ```
 
+Anyway, this means our chialisp code might be too costly and we should optimize it. We can look at the cost by running it locally with the same solution.
+
+_This is why I like chialisp and its pure functional programming model as it doesn't depend on external/unknown state to execute it_
+
+```sh
+❯ brun (run ./piggybank/piggybank.clsp -i ./include) '(() ((0xab800c725ee21f1afc180793270df17e8b2b6c98395d29b534cc22d476a18ceb 0x05f5e100) (0x46564cec8e013310b4deee4d357c873a8d642bc807dafac165d3c2045fe06680 0x11e1a300) (0x94115a9ec073588f67c997c785609077256fe1ce9e3ecbdabfe8576e50bcbaa3 0x05f5e100)) 0x7383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257)' -c --time
+cost = 32666
+assemble_from_ir: 0.084439
+to_sexp_f: 0.000377
+run_program: 0.024141
+((51 0xa6a4ed372c785816fb92fb79b96fd7f9758811907f74ebe189c93310e3ba89e6 0x1dcd6500) (51 0x7383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257 ()) (72 0x7383903f3da7d044146aef59fec5dac0da98c6ae427b7c14d3e22ebd548a4257) (73 ()) (62 0xc3ece1e4aa5c36928ed71a1cbafef1381e3f65be0e8614b64c03b22d6d19a6cf) (62 0xd90b60e5fbdac8c2f220197f041d2884013ed35fa70435ce0d26aa5a3331f38e) (62 0xd1aee15216ddcadd8380380a0ec451c38b0a75ee77f8c1548629abef6f629f24))
+```
 
 ## Conclusions
 
-Now our contribution coins can only be spent by a user with a designated secret key. And we also resolve the annoucement issue!
+Now our contribution coins can only be spent by a user with a designated secret key. And we also resolve the annoucement issue. But we experience that our chialisp puzzle is expensive to run and might not work (or require high transaction fees) when **mempool** is full.
+
+## References
+- [chialisp.com | 7 - Lifecycle of a Coin | Fees and the Mempool](https://chialisp.com/docs/coin_lifecycle#fees-and-the-mempool)
+- [chialisp.com | 10 - Optimization](https://chialisp.com/docs/optimization)
+- [CLVM reference | costs](https://chialisp.com/docs/ref/clvm#costs)
+- [mempool_manager.py#L386](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/full_node/mempool_manager.py#L386)
