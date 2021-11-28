@@ -23,10 +23,15 @@ sig3: G2Element = AugSchemeMPL.sign(sk3, message_as_bytes, agg_pk)
 
 # aggregate three signatures to one
 agg_sig = AugSchemeMPL.aggregate([sig1, sig2, sig3])
+assert AugSchemeMPL.verify(agg_pk, message_as_bytes, agg_sig)
+
+sig1: G2Element = AugSchemeMPL.sign(sk1, message_as_bytes)
+sig2: G2Element = AugSchemeMPL.sign(sk2, message_as_bytes)
+sig3: G2Element = AugSchemeMPL.sign(sk3, message_as_bytes)
 
 # verify signatures
-agg_verify = AugSchemeMPL.verify(agg_pk, message_as_bytes, agg_sig)
-
-assert(agg_verify)
+assert AugSchemeMPL.verify(pk1, message_as_bytes, sig1)
+assert AugSchemeMPL.verify(pk2, message_as_bytes, sig2)
+assert AugSchemeMPL.verify(pk3, message_as_bytes, sig3)
 
 # https://github.com/Chia-Network/bls-signatures/blob/0dfd8b6415670608d60523fb4de3022d8c676096/python-bindings/test.py#L43
