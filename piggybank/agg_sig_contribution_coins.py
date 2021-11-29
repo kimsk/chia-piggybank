@@ -50,6 +50,11 @@ sig2: G2Element = AugSchemeMPL.sign(sk,
                 )
 
 sig = AugSchemeMPL.aggregate([sig1, sig2])
+assert(AugSchemeMPL.verify(sk.get_g1(), 
+                    std_hash(int_to_bytes(cc.amount))
+                    + cc.name()
+                    + DEFAULT_CONSTANTS.AGG_SIG_ME_ADDITIONAL_DATA,
+                    sig1))
 
 spend_bundle = SpendBundle(coin_spends, sig)
 print_json(spend_bundle.to_json_dict(include_legacy_keys = False, exclude_modern_keys = False))

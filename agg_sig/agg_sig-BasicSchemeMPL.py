@@ -19,22 +19,15 @@ sig2: G2Element = BasicSchemeMPL.sign(sk2, message_as_bytes)
 sig3: G2Element = BasicSchemeMPL.sign(sk3, message_as_bytes)
 
 # verify signatures
-verify1 = BasicSchemeMPL.verify(pk1, message_as_bytes, sig1)
-verify2 = BasicSchemeMPL.verify(pk2, message_as_bytes, sig2)
-verify3 = BasicSchemeMPL.verify(pk3, message_as_bytes, sig3)
+assert BasicSchemeMPL.verify(pk1, message_as_bytes, sig1)
+assert BasicSchemeMPL.verify(pk2, message_as_bytes, sig2)
+assert BasicSchemeMPL.verify(pk3, message_as_bytes, sig3)
 
 # aggregate three signatures to one
 agg_sig = BasicSchemeMPL.aggregate([sig1, sig2, sig3])
 
 # aggregate three public keys to one aggregated public key
 agg_pk = pk1 + pk2 + pk3
-agg_verify = BasicSchemeMPL.verify(agg_pk, message_as_bytes, agg_sig)
-
-print(agg_pk)
-
-assert(verify1)
-assert(verify2)
-assert(verify3)
-assert(agg_verify)
+assert BasicSchemeMPL.verify(agg_pk, message_as_bytes, agg_sig)
 
 # https://github.com/Chia-Network/bls-signatures/blob/0dfd8b6415670608d60523fb4de3022d8c676096/python-bindings/test.py#L43
