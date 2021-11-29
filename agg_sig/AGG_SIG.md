@@ -4,7 +4,7 @@ We have learned that we need `AGG_SIG_ME` condition(s) to secure our coin and sp
 
 ## Use Multiple Public Keys
 
-To verify multiple signatures, the most obvios way is to add multiple `AGG_SIG_ME` conditions to verify that (the aggregated signature is the aggregate of signatures)[https://chialisp.com/docs/coins_spends_and_wallets#bls-aggregated-signatures] signed by every participant we need.
+To verify multiple signatures, the most obvios way is to add multiple `AGG_SIG_ME` conditions to verify that [the aggregated signature is the aggregate of signatures](https://chialisp.com/docs/coins_spends_and_wallets#bls-aggregated-signatures) signed by every participant we need.
 
 ```lisp
 (mod (
