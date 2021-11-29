@@ -77,6 +77,15 @@ assert AugSchemeMPL.verify(agg_pk,
                     + DEFAULT_CONSTANTS.AGG_SIG_ME_ADDITIONAL_DATA,
                     agg_sig)
 
+assert AugSchemeMPL.aggregate_verify([agg_pk],
+                    [
+                        message
+                        + agg_sig_coin.name()
+                        + DEFAULT_CONSTANTS.AGG_SIG_ME_ADDITIONAL_DATA
+                    ],
+                    agg_sig)
+
+
 spend_bundle = SpendBundle([spend], agg_sig)
 # print(spend_bundle)
 
