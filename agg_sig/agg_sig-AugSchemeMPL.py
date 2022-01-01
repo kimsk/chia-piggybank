@@ -60,4 +60,22 @@ assert AugSchemeMPL.verify(pk1, m3, sig3)
 agg_sig = AugSchemeMPL.aggregate([sig1, sig2, sig3])
 assert AugSchemeMPL.aggregate_verify([pk1, pk1, pk1], [m1, m2, m3], agg_sig)
 
+
+# 3 keys, 3 messages, aggregated
+m1 = bytes("1", "utf-8")
+m2 = bytes("2", "utf-8")
+m3 = bytes("3", "utf-8")
+
+sig1: G2Element = AugSchemeMPL.sign(sk1, m1)
+sig2: G2Element = AugSchemeMPL.sign(sk2, m2)
+sig3: G2Element = AugSchemeMPL.sign(sk3, m3)
+
+assert AugSchemeMPL.verify(pk1, m1, sig1)
+assert AugSchemeMPL.verify(pk2, m2, sig2)
+assert AugSchemeMPL.verify(pk3, m3, sig3)
+
+# aggregate verify
+agg_sig = AugSchemeMPL.aggregate([sig1, sig2, sig3])
+assert AugSchemeMPL.aggregate_verify([pk1, pk2, pk3], [m1, m2, m3], agg_sig)
+
 # https://github.com/Chia-Network/bls-signatures/blob/0dfd8b6415670608d60523fb4de3022d8c676096/python-bindings/test.py#L43
