@@ -1,5 +1,4 @@
-from blspy import (PrivateKey, AugSchemeMPL,
-                   G1Element, G2Element)
+from blspy import (PrivateKey, G1Element)
 
 sk1: PrivateKey = PrivateKey.from_bytes(bytes.fromhex("0a900677882bcfa970724a381900e7b6c0d40425fda8a2d1f2db90a13d960472"))
 pk1: G1Element = sk1.get_g1()
@@ -10,3 +9,5 @@ assert pk2 == G1Element.from_bytes(bytes.fromhex("a4a0b8aed35ad944b287d0a46245c0
 sk3: PrivateKey = PrivateKey.from_bytes(bytes.fromhex("12acd472632e04bf69ff6bf9715e37fdd8d752874e29ae44ba8d53bb3744b4fc"))
 pk3: G1Element = sk3.get_g1()
 assert pk3 == G1Element.from_bytes(bytes.fromhex(" a4d62928c171673d15f268812499870346e7ce2d78321a23fc9584ea3c21f090a84215cc522a15de967a96aaae710587"))
+
+# Signature is G2Element
