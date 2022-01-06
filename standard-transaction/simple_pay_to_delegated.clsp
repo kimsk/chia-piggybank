@@ -1,0 +1,9 @@
+(mod (PUB_KEY delegated_puzzle solution)
+
+    (include condition_codes.clib)
+
+    (c
+        (list AGG_SIG_ME PUB_KEY (sha256 "hello delegated puzzle"))
+        (a delegated_puzzle solution)
+    )
+)
