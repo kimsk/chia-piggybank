@@ -48,7 +48,8 @@ spend = CoinSpend(
     solution 
 )
 
-message: bytes = std_hash(bytes("hello delegated puzzle", "utf-8"))
+# message: bytes = std_hash(bytes("hello delegated puzzle", "utf-8"))
+message: bytes = Program.to(1).get_tree_hash() # (mod conditions conditions)
 alice_sk: PrivateKey = alice.pk_to_sk(alice.pk())
 sig: G2Element = AugSchemeMPL.sign(
     alice_sk,
@@ -64,11 +65,20 @@ asyncio.run(network.push_tx(spend_bundle))
 print(f'alice balance:\t{alice.balance()}')
 print(f'bob balance:\t{bob.balance()}')
 
+alice_coin_id = alice_coin.name()
+alice_coin_record = asyncio.run(
+    network.sim_client.get_coin_record_by_name(alice_coin_id))
+print(alice_coin_record)
+
+coin_spend: CoinSpend = asyncio.run(
+    network.sim_client.get_puzzle_and_solution(alice_coin_id, alice_coin_record.spent_block_index))
+print(coin_spend.puzzle_reveal)
+
 asyncio.run(network.close())
 
-# import json
+import json
 
-# def print_json(dict):
-#     print(json.dumps(dict, sort_keys=True, indent=4))
+def print_json(dict):
+    print(json.dumps(dict, sort_keys=True, indent=4))
 
-# print_json(spend_bundle.to_json_dict(include_legacy_keys = False, exclude_modern_keys = False))
+print_json(spend_bundle.to_json_dict(include_legacy_keys = False, exclude_modern_keys = False))
