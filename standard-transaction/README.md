@@ -17,7 +17,7 @@ Here is the simplest example:
 
 ## Delegated Puzzle
 
-Better yet, Chialisp puzzle, treating code (as a 1st class citizen) like data, can be provided [a puzzle and solution to execut](https://chialisp.com/docs/coins_spends_and_wallets#example-pay-to-delegated-puzzle) and output the conditions! 
+Better yet, Chialisp puzzle, treating code (as a 1st class citizen) like data, can be provided [a puzzle and solution to execute](https://chialisp.com/docs/coins_spends_and_wallets#example-pay-to-delegated-puzzle) and output the conditions! 
 
 We call the provided puzzle that can create the ouput conditions, [delegated puzzle](https://chialisp.com/docs/standard_transaction#pay-to-delegated-puzzle-or-hidden-puzzle).
 
@@ -121,5 +121,27 @@ push spend bundle:
 
 alice balance:  1999999000000
 bob balance:    1000000
+```
+
+## Sign Delegated Puzzle Hash
+
+The above example is not secure because the malicious farmer can change the delegated puzzle and solution. We could fix this by signing the hash of the delegated puzzle, so we are certain that nobody changes the delegated puzzle.
+
+```lisp
+(c
+    (list AGG_SIG_ME PUB_KEY (sha256tree delegated_puzzle))
+    (a delegated_puzzle solution)
+)
+```
+
+```python
+message: bytes = Program.to(1).get_tree_hash() # (mod conditions conditions)
+alice_sk: PrivateKey = alice.pk_to_sk(alice.pk())
+sig: G2Element = AugSchemeMPL.sign(
+    alice_sk,
+    message
+    + alice_coin.name()
+    + DEFAULT_CONSTANTS.AGG_SIG_ME_ADDITIONAL_DATA,
+)
 ```
 
