@@ -174,7 +174,12 @@ synthetic_sk: PrivateKey = calculate_synthetic_secret_key(sk1, DEFAULT_HIDDEN_PU
 ## Spend Standard Transaction
 
 - [spend_coin_sim.py](spend_coin_sim.py)
+> alice sends xch to bob.
+- [multi-signatures-sim.py](multi-signatures-sim.py)
+> alice sends xch to carol, but bob needs to approve the amount. The signature is non-interactively aggregated.
 - [spend_coin_testnet10.py](spend_coin_testnet10.py)
+> send random coin on testnet10
+
 
 ```sh
 ❯ brun '(a (q 2 (q 2 (i 11 (q 2 (i (= 5 (point_add 11 (pubkey_for_exp (sha256 11 (a 6 (c 2 (c 23 ()))))))) (q 2 23 47) (q 8)) 1) (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 23 ()))) ()))) (a 23 47))) 1) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xb50b02adba343fff8bf3a94e92ed7df43743aedf0006b81a6c00ae573c0cce7d08216f60886fe84e4078a5209b0e5171) 1))' '(() (q (51 0x5abb5d5568b4a7411dd97b3356cfedfac09b5fb35621a7fa29ab9b59dc905fb6 0x0f4240) (51 0x4eb7420f8651b09124e1d40cdc49eeddacbaa0c25e6ae5a0a482fac8e3b5259f 0x0197741199c0)) ())'

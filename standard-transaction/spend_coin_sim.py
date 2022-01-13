@@ -40,6 +40,7 @@ condition_args = [
     [ConditionOpcode.CREATE_COIN, bob.puzzle_hash, amt],
     [ConditionOpcode.CREATE_COIN, alice.puzzle_hash, alice_coin.amount - amt],
 ]
+
 delegated_puzzle_solution = Program.to((1, condition_args))
 
 # calculate synthetic_sk to sign the spend
