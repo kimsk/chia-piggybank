@@ -145,3 +145,48 @@ sig: G2Element = AugSchemeMPL.sign(
 )
 ```
 
+The python code above shows how we pre-committed the delegated puzzle, `1` or `(mod conditions conditions)` without storing it inside the coin puzzle. We verify that the provided `delegated_puzzle` matches the expected puzzle by verifying the puzzle hash using `AGG_SIG_ME`.
+
+## Pay To Delegated Puzzle or Hidden Puzzle
+
+The [puzzle](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.clvm) in Chia standard transaction coin is [Pay to "Delegated Puzzle" or "Hidden Puzzle"](https://chialisp.com/docs/standard_transaction#pay-to-delegated-puzzle-or-hidden-puzzle). Coins with the puzzle can be unlocked by signing a delegated puzzle and its solution with a **synthetic private key** OR by revealing the hidden puzzle and the underlying original key.
+
+### Synthetic Keys
+
+The synthetic private key (hence, new public key) is deriving from the hidden puzzle and the original public key.
+
+```python
+# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L41
+# synthetic_offset = sha256(hidden_puzzle_hash + original_public_key)
+synthetic_offset: int = calculate_synthetic_offset(pk1, DEFAULT_HIDDEN_PUZZLE_HASH)
+
+# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L48
+# synthentic_public_key = original_public_key + synthetic_offset_pubkey
+# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/calculate_synthetic_public_key.clvm
+# (point_add public_key (pubkey_for_exp (sha256 public_key hidden_puzzle_hash)))
+synthetic_pk: G1Element = calculate_synthetic_public_key(pk1, DEFAULT_HIDDEN_PUZZLE_HASH)
+
+
+# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L53
+synthetic_sk: PrivateKey = calculate_synthetic_secret_key(sk1, DEFAULT_HIDDEN_PUZZLE_HASH)
+```
+
+## Spend Standard Transaction
+
+- [spend_coin_sim.py](spend_coin_sim.py)
+- [spend_coin_testnet10.py](spend_coin_testnet10.py)
+
+```sh
+❯ brun '(a (q 2 (q 2 (i 11 (q 2 (i (= 5 (point_add 11 (pubkey_for_exp (sha256 11 (a 6 (c 2 (c 23 ()))))))) (q 2 23 47) (q 8)) 1) (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 23 ()))) ()))) (a 23 47))) 1) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xb50b02adba343fff8bf3a94e92ed7df43743aedf0006b81a6c00ae573c0cce7d08216f60886fe84e4078a5209b0e5171) 1))' '(() (q (51 0x5abb5d5568b4a7411dd97b3356cfedfac09b5fb35621a7fa29ab9b59dc905fb6 0x0f4240) (51 0x4eb7420f8651b09124e1d40cdc49eeddacbaa0c25e6ae5a0a482fac8e3b5259f 0x0197741199c0)) ())'
+((50 0xb50b02adba343fff8bf3a94e92ed7df43743aedf0006b81a6c00ae573c0cce7d08216f60886fe84e4078a5209b0e5171 0x1ec848ca82cf27fd8bcb2b796de6e8448576ac117c2cb4f4ba6f9d6c9c8d7a55) (51 0x5abb5d5568b4a7411dd97b3356cfedfac09b5fb35621a7fa29ab9b59dc905fb6 0x0f4240) (51 0x4eb7420f8651b09124e1d40cdc49eeddacbaa0c25e6ae5a0a482fac8e3b5259f 0x0197741199c0))
+```
+
+# References
+
+- [Aggregated Signatures, Taproot, Graftroot, and Standard Transactions](https://www.chia.net/2021/05/27/Agrgregated-Sigs-Taproot-Graftroot.html)- [2 - Coins, Spends and Wallets | Chialisp.com](https://chialisp.com/docs/coins_spends_and_wallets/)
+- [3 - Deeper into CLVM | Chialisp.com](https://chialisp.com/docs/deeper_into_clvm/)
+- [6 - The Standard Transaction | Chialisp.com](https://chialisp.com/docs/standard_transaction/)
+- [Signatures in Chia](https://aggsig.me/signatures.html)
+- [chia.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py)
+- [What is Taproot? Technology to Enhance Bitcoin’s Privacy](https://blockonomi.com/bitcoin-taproot/)
+- [What is Bitcoin’s Graftroot? Complete Beginner’s Guide](https://blockonomi.com/bitcoin-graftroot/)

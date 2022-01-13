@@ -1,4 +1,5 @@
 import asyncio
+import utils
 
 from blspy import (PrivateKey, AugSchemeMPL, G2Element)
 from cdv.test import Network, Wallet
@@ -12,13 +13,34 @@ from chia.util.hash import std_hash
 
 network: Network = asyncio.run(Network.create())
 asyncio.run(network.farm_block())
-alice: Wallet = network.make_wallet("alice")
-asyncio.run(network.farm_block(farmer=alice))
-print(f'alice balance:\t{alice.balance()}')
 
+alice: Wallet = network.make_wallet("alice")
 bob: Wallet = network.make_wallet("bob")
 
-MOD = load_clvm("simple_pay_to_delegated.clsp", package_or_requirement=__name__, search_paths=["../include"])
+asyncio.run(network.farm_block(farmer=alice))
+print(f'alice balance:\t{alice.balance()}')
+print(f'bob balance:\t{bob.balance()}')
+
+alice_coins = alice.usable_coins 
+print(f'alice coins:')
+for k, c in alice_coins.items():
+    print(k)
+    utils.print_json(c.to_json_dict())
+
+# (mod (PUB_KEY delegated_puzzle solution)
+
+#     (include condition_codes.clib)
+#     (include sha256tree.clib)
+
+#     (c
+#         (list AGG_SIG_ME PUB_KEY (sha256tree delegated_puzzle))
+#         (a delegated_puzzle solution)
+#     )
+# )
+MOD = load_clvm("simple_pay_to_delegated.clsp",
+    package_or_requirement=__name__,
+    search_paths=["../include"]
+)
 
 # create a smart coin and curry in alice's pk
 amt = 1_000_000
@@ -76,9 +98,4 @@ print(coin_spend.puzzle_reveal)
 
 asyncio.run(network.close())
 
-import json
-
-def print_json(dict):
-    print(json.dumps(dict, sort_keys=True, indent=4))
-
-print_json(spend_bundle.to_json_dict(include_legacy_keys = False, exclude_modern_keys = False))
+# utils.print_json(spend_bundle.to_json_dict(include_legacy_keys = False, exclude_modern_keys = False))
