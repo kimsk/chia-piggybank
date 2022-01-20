@@ -1,38 +1,21 @@
-import asyncio
-
-import utils
-
-from blspy import (PrivateKey, AugSchemeMPL, G2Element)
-from cdv.test import Network, SmartCoinWrapper, Wallet
-from cdv.util.load_clvm import load_clvm
+from blspy import (PrivateKey, AugSchemeMPL, G1Element, G2Element)
 from chia.consensus.default_constants import DEFAULT_CONSTANTS
 from chia.types.blockchain_format.program import Program
+from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend
 from chia.types.condition_opcodes import ConditionOpcode
 from chia.types.spend_bundle import SpendBundle
 from chia.util.hash import std_hash
 from chia.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle import DEFAULT_HIDDEN_PUZZLE_HASH, calculate_synthetic_secret_key, puzzle_for_public_key_and_hidden_puzzle_hash
 
-network: Network = asyncio.run(Network.create())
-asyncio.run(network.farm_block())
+from sim import alice, bob, farm, get_coin, push_tx, end
 
-alice: Wallet = network.make_wallet("alice")
-bob: Wallet = network.make_wallet("bob")
-
-asyncio.run(network.farm_block(farmer=alice))
-print(f'alice balance:\t{alice.balance()}')
-print(f'bob balance:\t{bob.balance()}')
-
-alice_coins = alice.usable_coins 
-print(f'alice coins:')
-for k, c in alice_coins.items():
-    print(k)
-    utils.print_json(c.to_json_dict())
+farm(alice)
 
 # spend standard transaction coin
 # alice sends 1 million mojos to bob
 amt = 1_000_000
-alice_coin = asyncio.run(alice.choose_coin(amt))
+alice_coin = get_coin(alice, amt)
 assert alice_coin != None
 print(f'alice coin:\t{alice_coin}')
 
@@ -79,7 +62,6 @@ print(f'alice_coin.puzzle_hash:\t{alice_coin.puzzle_hash}')
 assert alice_puzzle.get_tree_hash() == alice_coin.puzzle_hash
 assert alice.puzzle.get_tree_hash() == alice_coin.puzzle_hash
 
-
 spend_bundle = SpendBundle(
     [
         CoinSpend(
@@ -91,21 +73,8 @@ spend_bundle = SpendBundle(
     sig,
 )
 
-asyncio.run(network.push_tx(spend_bundle))
+push_tx(spend_bundle)
 print(f'alice balance:\t{alice.balance()}')
 print(f'bob balance:\t{bob.balance()}')
 
-alice_coin_id = alice_coin.name()
-alice_coin_record = asyncio.run(
-    network.sim_client.get_coin_record_by_name(alice_coin_id))
-print(alice_coin_record)
-
-coin_spend: CoinSpend = asyncio.run(
-    network.sim_client.get_puzzle_and_solution(alice_coin_id, alice_coin_record.spent_block_index))
-print(coin_spend.puzzle_reveal)
-print(alice_puzzle)
-print(coin_spend.solution)
-
-assert alice_puzzle.get_tree_hash() == coin_spend.puzzle_reveal.get_tree_hash()
-
-asyncio.run(network.close())
+end()

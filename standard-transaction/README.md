@@ -125,7 +125,7 @@ bob balance:    1000000
 
 ## Sign Delegated Puzzle Hash
 
-The above example is not secure because the malicious farmer can change the delegated puzzle and solution. We could fix this by signing the hash of the delegated puzzle, so we are certain that nobody changes the delegated puzzle.
+The above example is not secure because the malicious actor can modify the delegated puzzle and solution. _We could fix this by signing the hash of the delegated puzzle, so we are certain that nobody changes the delegated puzzle_.
 
 ```lisp
 (c
@@ -147,38 +147,166 @@ sig: G2Element = AugSchemeMPL.sign(
 
 The python code above shows how we pre-committed the delegated puzzle, `1` or `(mod conditions conditions)` without storing it inside the coin puzzle. We verify that the provided `delegated_puzzle` matches the expected puzzle by verifying the puzzle hash using `AGG_SIG_ME`.
 
+## Hidden Puzzle
+
+However, we want the ability to pre-commit to a puzzle without revealing other coins that have the same pre-committed hidden puzzle.
+
+For example, if we want to pre-committed password-locked puzzle below to our coin puzzle:
+
+```lisp
+; hello is a password
+(mod
+    (password new_puzhash amount)
+    (if (= (sha256 password) (q . 0x2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824))
+            (list (list 51 new_puzhash amount))
+            (x "wrong password")
+    )
+)
+; puzzle hash is 0x5aa1f8e77872fa19b0227e752dee6bafa18b43d37996c4b2a5a845d8959baa2c
+```
+
+We can create a coin puzzle which will verify the delegated puzzle hash.
+
+```lisp
+; coin puzzle
+(mod (PUB_KEY delegated_puzzle solution)
+
+    (include condition_codes.clib)
+    (include sha256tree.clib)
+
+    (c
+        (list AGG_SIG_ME PUB_KEY (sha256tree delegated_puzzle))
+        (a delegated_puzzle solution)
+    )
+)
+```
+
+Let's run our puzzle:
+
+```sh
+# curry in PUB_KEY
+❯ cdv clsp curry ./password-locked-coin.clsp -i ../include -a 0xcafef00d
+(a (q 2 (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 11 ()))) ()))) (a 11 23)) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xcafef00d) 1))
+
+
+# get coin's puzzle hash
+❯ cdv clsp curry ./password-locked-coin.clsp -i ../include -a 0xcafef00d --treehash
+139bfaabb5949487bbe9a73051d5dd44c75ccb99480ff0f02d58ff5ca1b10ef3
+
+# wrong password
+❯ brun '(a (q 2 (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 11 ()))) ()))) (a 11 23)) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xcafef00d) 1))' '((a (i (= (sha256 2) (q . 0x2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824)) (q 4 (c (q . 51) (c 5 (c 11 ()))) ()) (q 8 (q . \"wrong password\"))) 1) (\"hi\" 0xdeadbeef 100))'  
+FAIL: clvm raise ("wrong password")
+
+# successful spending
+❯ brun '(a (q 2 (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 11 ()))) ()))) (a 11 23)) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xcafef00d) 1))' '((a (i (= (sha256 2) (q . 0x2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824)) (q 4 (c (q . 51) (c 5 (c 11 ()))) ()) (q 8 (q . \"wrong password\"))) 1) (\"hello\" 0xdeadbeef 100))'  
+((50 0xcafef00d 0x5aa1f8e77872fa19b0227e752dee6bafa18b43d37996c4b2a5a845d8959baa2c) (51 0xdeadbeef 100))
+```
+
+The problem is once we spend one password-locked-coin puzzle, the `delegated_puzzle` is then revealed. Anyone will know what the delegated puzzle (and its puzzle hash) and solution is for any unspent coins with hash, `0x139bfaabb5949487bbe9a73051d5dd44c75ccb99480ff0f02d58ff5ca1b10ef3`.
+
+We want an ability to pre-commit to a puzzle without revealing other coins that have the same pre-committed hidden puzzle.
+
+### Synthetic Key
+
+The solution is to generate a new public key from 
+1. the hidden puzzle itself and
+2. the public key that can sign for the delegated spend case.
+
+`synthetic_offset == sha256(hidden_puzzle_hash + original_public_key)`
+
+`synthentic_public_key == original_public_key + synthetic_offset_pubkey`
+
+![Taproot Public Key Generation](https://www.chia.net/assets/blog/Taproot-Pub-Key-Generation.png)
+
+We will modify our original coin puzzle to use `synthetic public key` and also verify that the hidden puzzle is correct. 
+
+[password-locked-coin.clsp](password-locked-coin.clsp)
+```lisp
+(mod (SYNTHETIC_PK original_pk delegated_puzzle solution)
+
+    (include condition_codes.clib)
+    (include sha256tree.clib)
+
+    (defun-inline is_hidden_puzzle_correct (SYNTHETIC_PK original_pk delegated_puzzle)
+      (=
+          SYNTHETIC_PK
+          (point_add
+              original_pk
+              (pubkey_for_exp (sha256 original_pk (sha256tree delegated_puzzle)))
+          )
+      )
+    )
+
+    (if (is_hidden_puzzle_correct SYNTHETIC_PK original_pk delegated_puzzle)
+        (c
+            (list AGG_SIG_ME SYNTHETIC_PK (sha256tree delegated_puzzle))
+            (a delegated_puzzle solution)
+        )
+        (x "wrong delegated puzzle")
+    )
+)
+```
+
+[synthetic-key-demo.py](synthetic-key-demo.py)
+```python
+# synthetic public key
+synthetic_pk: G1Element = calculate_synthetic_public_key(
+    alice.pk(),
+    password_locked_delegated_hash
+)
+
+# synthetic private key
+synthetic_sk: PrivateKey = calculate_synthetic_secret_key(
+    alice.sk_,
+    password_locked_delegated_hash
+)
+
+# (SYNTHETIC_PK original_pk delegated_puzzle solution)
+# original_pk is alice's pk
+# delegated_puzzle is password-locked delegated
+# solution is ("hello" bob_puzz_hash amt)
+# sending mojos to bob
+password_locked_coin_solution = Program.to([
+    alice.pk(),
+    password_locked_delegated,
+    ["hello", bob.puzzle_hash, amt]
+])
+```
+
+
 ## Pay To Delegated Puzzle or Hidden Puzzle
 
-The [puzzle](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.clvm) in Chia standard transaction coin is [Pay to "Delegated Puzzle" or "Hidden Puzzle"](https://chialisp.com/docs/standard_transaction#pay-to-delegated-puzzle-or-hidden-puzzle). Coins with the puzzle can be unlocked by signing a delegated puzzle and its solution with a **synthetic private key** OR by revealing the hidden puzzle and the underlying original key.
-
-### Synthetic Keys
-
-The synthetic private key (hence, new public key) is deriving from the hidden puzzle and the original public key.
-
-```python
-# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L41
-# synthetic_offset = sha256(hidden_puzzle_hash + original_public_key)
-synthetic_offset: int = calculate_synthetic_offset(pk1, DEFAULT_HIDDEN_PUZZLE_HASH)
-
-# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L48
-# synthentic_public_key = original_public_key + synthetic_offset_pubkey
-# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/calculate_synthetic_public_key.clvm
-# (point_add public_key (pubkey_for_exp (sha256 public_key hidden_puzzle_hash)))
-synthetic_pk: G1Element = calculate_synthetic_public_key(pk1, DEFAULT_HIDDEN_PUZZLE_HASH)
-
-
-# https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L53
-synthetic_sk: PrivateKey = calculate_synthetic_secret_key(sk1, DEFAULT_HIDDEN_PUZZLE_HASH)
-```
+Chia team provides and recommmends utilizing a **standard transaction** with [Pay to "Delegated Puzzle" or "Hidden Puzzle"](https://chialisp.com/docs/standard_transaction#pay-to-delegated-puzzle-or-hidden-puzzle) for most vanilla transactions. Coins with the [puzzle](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.clvm) can be unlocked by either signing a delegated puzzle and its solution with a **synthetic private key** OR by **revealing the hidden puzzle and the underlying original key**.
 
 ## Spend Standard Transaction
 
-- [spend_coin_sim.py](spend_coin_sim.py)
-> alice sends xch to bob.
-- [multi-signatures-sim.py](multi-signatures-sim.py)
-> alice sends xch to carol, but bob needs to approve the amount. The signature is non-interactively aggregated.
-- [spend_coin_testnet10.py](spend_coin_testnet10.py)
-> send random coin on testnet10
+The cool thing about the standard transaction is that we can control how the standard transaction coin is spent by providing our own delegated puzzle and solutions.
+
+Let's look at some scenarios that we can use the `p2_delegated_puzzle_or_hidden_puzzle`.
+
+1. [Normal Spend](normal-spend.py)
+    - `DEFAULT_HIDDEN_PUZZLE_HASH`
+    - alice is the coin owner and wants to send coin to bob
+    
+1. [Approved Spend (2 of 2)](approved-spend.py)
+    - `DEFAULT_HIDDEN_PUZZLE_HASH`
+    - alice is the coin owner (i.e., coin's puzzle hash encoded to alice's wallet address & changes return to alice).
+    - alice wants to send xch to charlie.
+    - bob needs to **approve** the amount and recipient's address.
+
+1. Multi-sig (m of m)
+    - alice, bob, and charlie wants to contribute 1 XCH each (total of 3 XCH) and give to ellen.
+    
+
+1. Others
+    - [spend_coin_sim.py](spend_coin_sim.py)
+    > alice sends xch to bob.
+
+    - [spend_coin_testnet10.py](spend_coin_testnet10.py)
+    > send random coin on testnet10
+
+
+
 
 
 ```sh
@@ -195,3 +323,4 @@ synthetic_sk: PrivateKey = calculate_synthetic_secret_key(sk1, DEFAULT_HIDDEN_PU
 - [chia.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py)
 - [What is Taproot? Technology to Enhance Bitcoin’s Privacy](https://blockonomi.com/bitcoin-taproot/)
 - [What is Bitcoin’s Graftroot? Complete Beginner’s Guide](https://blockonomi.com/bitcoin-graftroot/)
+- [Multi-signature application examples](https://en.bitcoin.it/wiki/Multi-signature)

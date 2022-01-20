@@ -8,7 +8,8 @@ from chia.types.spend_bundle import SpendBundle
 from chia.util.bech32m import decode_puzzle_hash, encode_puzzle_hash
 from chia.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle import DEFAULT_HIDDEN_PUZZLE_HASH, calculate_synthetic_secret_key, puzzle_for_pk, puzzle_for_public_key_and_hidden_puzzle_hash
 
-from utils import get_coin, print_json 
+from full_node import get_coin, genesis_challenge
+from utils import print_json
 
 # randomly generated sk
 # ❯ cdv inspect keys --random
@@ -68,7 +69,7 @@ sig = AugSchemeMPL.sign(synthetic_sk,
         delegated_puzzle_solution.get_tree_hash()
         + coin.name()
         # GENESIS_CHALLENGE for testenet10
-        + bytes.fromhex("ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2")
+        + genesis_challenge
     )
 )
 
