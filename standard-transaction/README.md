@@ -32,16 +32,19 @@ Here is the simplest example:
 Let's pass the simplest puzzle above:
 
 ```sh
+# the delegated puzzle
 ❯ run '(mod conditions conditions)'                                                
 1
 
+# the delegaged puzzle is the 1st parameter
+# the solution for the delegated puzzle is the 2nd parameter
 ❯ brun (run '(mod (delegated_puzzle solution) (a delegated_puzzle solution))') '(1 ((51 0xcafef00d 1000) (73 1000)))'
 ((51 0xcafef00d 1000) (73 1000))
 ```
 
 ## AGG_SIG_ME
 
-But as we know, the puzzle is not secure if there is no `AGG_SIG_ME` in the list of conditions. Also, we will need to have **public key** available too if we want to include `AGG_SIG_ME` condition.
+But as we know, the puzzle is [not secure](../POST-7.md) if there is no `AGG_SIG_ME` in the list of conditions. Also, we will need to have **public key** available too if we want to include `AGG_SIG_ME` condition.
 
 Here is the version with `AGG_SIG_ME`:
 
@@ -52,6 +55,7 @@ Here is the version with `AGG_SIG_ME`:
     (include condition_codes.clib)
 
     (c
+        ; hard-coded message
         (list AGG_SIG_ME PUB_KEY (sha256 "hello delegated puzzle"))
         (a delegated_puzzle solution)
     )
@@ -90,6 +94,7 @@ spend = CoinSpend(
     solution 
 )
 
+# hard-coded message
 message: bytes = std_hash(bytes("hello delegated puzzle", "utf-8"))
 alice_sk: PrivateKey = alice.pk_to_sk(alice.pk())
 sig: G2Element = AugSchemeMPL.sign(
@@ -129,13 +134,15 @@ The above example is not secure because the malicious actor can modify the deleg
 
 ```lisp
 (c
+    ; check if the delegated puzzle is tampered
     (list AGG_SIG_ME PUB_KEY (sha256tree delegated_puzzle))
     (a delegated_puzzle solution)
 )
 ```
 
 ```python
-message: bytes = Program.to(1).get_tree_hash() # (mod conditions conditions)
+ # message is a tree hash of `(mod conditions conditions)`
+message: bytes = Program.to(1).get_tree_hash()
 alice_sk: PrivateKey = alice.pk_to_sk(alice.pk())
 sig: G2Element = AugSchemeMPL.sign(
     alice_sk,
@@ -147,138 +154,146 @@ sig: G2Element = AugSchemeMPL.sign(
 
 The python code above shows how we pre-committed the delegated puzzle, `1` or `(mod conditions conditions)` without storing it inside the coin puzzle. We verify that the provided `delegated_puzzle` matches the expected puzzle by verifying the puzzle hash using `AGG_SIG_ME`.
 
-## Hidden Puzzle
+## Pre-Committed Delegated Puzzle
 
-However, we want the ability to pre-commit to a puzzle without revealing other coins that have the same pre-committed hidden puzzle.
+We could also create a coin with pre-committed delegated puzzle and we just need solution to spend it.
 
-For example, if we want to pre-committed password-locked puzzle below to our coin puzzle:
-
+### coin puzzle (password-locked-curried.clsp)
 ```lisp
-; hello is a password
-(mod
-    (password new_puzhash amount)
+(mod (PUZZLE PUB_KEY solution)
+    (include condition_codes.clib)
+    (include sha256tree.clib)
+    (c
+        (list AGG_SIG_ME PUB_KEY (sha256tree PUZZLE))
+        (a PUZZLE solution)
+    )
+)
+```
+
+### password locked delegated puzzle (password-locked-delegated.clsp)
+```lisp
+; password is hard-coded, "hello"
+(mod (password new_puzhash amount)
     (if (= (sha256 password) (q . 0x2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824))
             (list (list 51 new_puzhash amount))
             (x "wrong password")
     )
 )
-; puzzle hash is 0x5aa1f8e77872fa19b0227e752dee6bafa18b43d37996c4b2a5a845d8959baa2c
 ```
 
-We can create a coin puzzle which will verify the delegated puzzle hash.
-
-```lisp
-; coin puzzle
-(mod (PUB_KEY delegated_puzzle solution)
-
-    (include condition_codes.clib)
-    (include sha256tree.clib)
-
-    (c
-        (list AGG_SIG_ME PUB_KEY (sha256tree delegated_puzzle))
-        (a delegated_puzzle solution)
-    )
-)
-```
-
-Let's run our puzzle:
-
-```sh
-# curry in PUB_KEY
-❯ cdv clsp curry ./password-locked-coin.clsp -i ../include -a 0xcafef00d
-(a (q 2 (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 11 ()))) ()))) (a 11 23)) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xcafef00d) 1))
-
-
-# get coin's puzzle hash
-❯ cdv clsp curry ./password-locked-coin.clsp -i ../include -a 0xcafef00d --treehash
-139bfaabb5949487bbe9a73051d5dd44c75ccb99480ff0f02d58ff5ca1b10ef3
-
-# wrong password
-❯ brun '(a (q 2 (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 11 ()))) ()))) (a 11 23)) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xcafef00d) 1))' '((a (i (= (sha256 2) (q . 0x2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824)) (q 4 (c (q . 51) (c 5 (c 11 ()))) ()) (q 8 (q . \"wrong password\"))) 1) (\"hi\" 0xdeadbeef 100))'  
-FAIL: clvm raise ("wrong password")
-
-# successful spending
-❯ brun '(a (q 2 (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 11 ()))) ()))) (a 11 23)) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xcafef00d) 1))' '((a (i (= (sha256 2) (q . 0x2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824)) (q 4 (c (q . 51) (c 5 (c 11 ()))) ()) (q 8 (q . \"wrong password\"))) 1) (\"hello\" 0xdeadbeef 100))'  
-((50 0xcafef00d 0x5aa1f8e77872fa19b0227e752dee6bafa18b43d37996c4b2a5a845d8959baa2c) (51 0xdeadbeef 100))
-```
-
-The problem is once we spend one password-locked-coin puzzle, the `delegated_puzzle` is then revealed. Anyone will know what the delegated puzzle (and its puzzle hash) and solution is for any unspent coins with hash, `0x139bfaabb5949487bbe9a73051d5dd44c75ccb99480ff0f02d58ff5ca1b10ef3`.
-
-We want an ability to pre-commit to a puzzle without revealing other coins that have the same pre-committed hidden puzzle.
-
-### Synthetic Key
-
-The solution is to generate a new public key from 
-1. the hidden puzzle itself and
-2. the public key that can sign for the delegated spend case.
-
-`synthetic_offset == sha256(hidden_puzzle_hash + original_public_key)`
-
-`synthentic_public_key == original_public_key + synthetic_offset_pubkey`
-
-![Taproot Public Key Generation](https://www.chia.net/assets/blog/Taproot-Pub-Key-Generation.png)
-
-We will modify our original coin puzzle to use `synthetic public key` and also verify that the hidden puzzle is correct. 
-
-[password-locked-coin.clsp](password-locked-coin.clsp)
-```lisp
-(mod (SYNTHETIC_PK original_pk delegated_puzzle solution)
-
-    (include condition_codes.clib)
-    (include sha256tree.clib)
-
-    (defun-inline is_hidden_puzzle_correct (SYNTHETIC_PK original_pk delegated_puzzle)
-      (=
-          SYNTHETIC_PK
-          (point_add
-              original_pk
-              (pubkey_for_exp (sha256 original_pk (sha256tree delegated_puzzle)))
-          )
-      )
-    )
-
-    (if (is_hidden_puzzle_correct SYNTHETIC_PK original_pk delegated_puzzle)
-        (c
-            (list AGG_SIG_ME SYNTHETIC_PK (sha256tree delegated_puzzle))
-            (a delegated_puzzle solution)
-        )
-        (x "wrong delegated puzzle")
-    )
-)
-```
-
-[synthetic-key-demo.py](synthetic-key-demo.py)
+### run the simulation
 ```python
-# synthetic public key
-synthetic_pk: G1Element = calculate_synthetic_public_key(
-    alice.pk(),
-    password_locked_delegated_hash
-)
+password_locked_delegated = load_clvm("password-locked-delegated.clsp", package_or_requirement=__name__, search_paths=["../include"]) 
+password_locked_curried =  load_clvm(
+        "password-locked-curried.clsp", package_or_requirement=__name__, search_paths=["../include"]
+    ).curry(password_locked_delegated, alice.pk_) # curry PUZZLE and PUB_KEY
 
-# synthetic private key
-synthetic_sk: PrivateKey = calculate_synthetic_secret_key(
-    alice.sk_,
-    password_locked_delegated_hash
-)
+print(password_locked_curried) 
 
-# (SYNTHETIC_PK original_pk delegated_puzzle solution)
-# original_pk is alice's pk
-# delegated_puzzle is password-locked delegated
-# solution is ("hello" bob_puzz_hash amt)
-# sending mojos to bob
-password_locked_coin_solution = Program.to([
-    alice.pk(),
-    password_locked_delegated,
+amt = 1_000_000_000
+password_locked_curried_coin = launch_smart_coin(
+    alice, 
+    password_locked_curried, 
+    amt)
+
+password_locked_curried_coin_solution = Program.to([ 
     ["hello", bob.puzzle_hash, amt]
 ])
+
+# sign the tree hash of password-locked-delegated puzzle
+sig = AugSchemeMPL.sign(alice.sk_,
+    (
+        password_locked_delegated.get_tree_hash()
+        + password_locked_curried_coin.name()
+        + DEFAULT_CONSTANTS.AGG_SIG_ME_ADDITIONAL_DATA
+    )
+)
+
+spend_bundle = SpendBundle(
+    [
+        CoinSpend(
+            password_locked_curried_coin.as_coin(),
+            password_locked_curried,
+            password_locked_curried_coin_solution,
+        )
+    ],
+    sig,
+)
 ```
 
+```json
+{
+    "aggregated_signature": "0xa46145ff038ae33d5776901c1a3dd36579ee6afda16cdb80a1ddaf4078b0a00703156c259bd1190dd321a25a7574946a057111aa4f0d9921dad7a3e6049e81bda1a8822439d885dfd7f9bb4e97a21489a7a9bf8b4a1e48919b4aa8c41ef6b6bd",
+    "coin_spends": [
+        {
+            "coin": {
+                "amount": 1000000000,
+                "parent_coin_info": "0x8d011a3236082916e08a2214379a063b38a8c7c2ed7fb6a708acf824e1d9b310",
+                "puzzle_hash": "0x1a45826b53cf0f3d759f664aad8e2303796284ecd59dbc78cb72cbc113dbd711"
+            },
+            "puzzle_reveal": "0xff02ffff01ff02ffff01ff04ffff04ff04ffff04ff0bffff04ffff02ff06ffff04ff02ffff04ff05ff80808080ff80808080ffff02ff05ff178080ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ffff04ffff01ff02ffff03ffff09ffff0bff0280ffff01a02cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b982480ffff01ff04ffff04ffff0133ffff04ff05ffff04ff0bff80808080ff8080ffff01ff08ffff018e77726f6e672070617373776f72648080ff0180ffff04ffff01b0ac2f40f6cb161f872f61910bdacd811534e5b5753242553d9022906cdfa479e172b1eac8e1f38a3743b7897e58942442ff01808080",
+            "solution": "0xffff8568656c6c6fffa05abb5d5568b4a7411dd97b3356cfedfac09b5fb35621a7fa29ab9b59dc905fb6ff843b9aca008080"
+        }
+    ]
+}
+```
 
 ## Pay To Delegated Puzzle or Hidden Puzzle
 
 Chia team provides and recommmends utilizing a **standard transaction** with [Pay to "Delegated Puzzle" or "Hidden Puzzle"](https://chialisp.com/docs/standard_transaction#pay-to-delegated-puzzle-or-hidden-puzzle) for most vanilla transactions. Coins with the [puzzle](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.clvm) can be unlocked by either signing a delegated puzzle and its solution with a **synthetic private key** OR by **revealing the hidden puzzle and the underlying original key**.
 
+The puzzle of normal coins you see in your wallet are the standard puzzle. If you look at the signature of the puzzle, you will see that `SYNTHETIC_PUBLIC_KEY` has to be curried in.
+
+```lisp
+(SYNTHETIC_PUBLIC_KEY public_key delegated_puzzle solution)
+```
+### Synthetic Key
+
+The synthetic key is the key derived from:
+1. the hidden puzzle itself.
+2. the public key that can sign for the delegated spend case.
+
+`synthetic_offset == sha256(hidden_puzzle_hash + public_key)`
+
+`synthentic_public_key == public_key + synthetic_offset_pubkey`
+
+![Taproot Public Key Generation](https://www.chia.net/assets/blog/Taproot-Pub-Key-Generation.png)
+> The image is from [Aggregated Signatures, Taproot, Graftroot, and Standard Transactions](https://www.chia.net/2021/05/27/Agrgregated-Sigs-Taproot-Graftroot.html)
+
+There are two ways to spend the standard transaction:
+
+1. Signing a delegated puzzle and its solution with `synthentic_private_key`
+
+```lisp
+(SYNTHETIC_PUBLIC_KEY _public_key delegated_puzzle solution)
+...
+
+(c
+    (list AGG_SIG_ME SYNTHETIC_PUBLIC_KEY (sha256tree1 delegated_puzzle)) 
+    (a delegated_puzzle solution)
+)
+```
+2. Revealing BOTH the **hidden puzzle** and the **public key**, so the standard transaction puzzle can derive the **synthetic public key** and make sure that it matches the one that is curried in.
+
+```lisp
+(SYNTHETIC_PUBLIC_KEY public_key hidden_puzzle solution)
+...
+(if (=
+        SYNTHETIC_PUBLIC_KEY
+        (point_add
+            public_key
+            (pubkey_for_exp (sha256 public_key (sha256tree1 hidden_puzzle)))
+        )
+    )
+    (a hidden_puzzle solution)
+    (x)
+)
+```
+
 ## Spend Standard Transaction
+
+> p2_delegated_puzzle_or_hidden_puzzle is essentially the "standard coin" in chia. DEFAULT_HIDDEN_PUZZLE_HASH from this puzzle is used with
+calculate_synthetic_secret_key in the wallet's standard pk_to_sk finder. [*](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L18)
 
 The cool thing about the standard transaction is that we can control how the standard transaction coin is spent by providing our own delegated puzzle and solutions.
 
@@ -294,9 +309,14 @@ Let's look at some scenarios that we can use the `p2_delegated_puzzle_or_hidden_
     - alice wants to send xch to charlie.
     - bob needs to **approve** the amount and recipient's address.
 
-1. Multi-sig (m of m)
-    - alice, bob, and charlie wants to contribute 1 XCH each (total of 3 XCH) and give to ellen.
-    
+1. [Multi-sig (m of m)](multi-sig-m-of-m.py)
+    - alice, bob, and charlie wants to contribute 1 XCH each (total of 3 XCH) and give to dan.
+    - everyone has to contribute or the spend won't happen. 
+
+1. [Saving Coin](scenario-1.py)
+    - alice and bob has a child named charlie.
+    - alice and bob wants to save 2 XCH for charlie.
+    - both alice and bob has to sign to spend the saving coin.
 
 1. Others
     - [spend_coin_sim.py](spend_coin_sim.py)
@@ -304,15 +324,6 @@ Let's look at some scenarios that we can use the `p2_delegated_puzzle_or_hidden_
 
     - [spend_coin_testnet10.py](spend_coin_testnet10.py)
     > send random coin on testnet10
-
-
-
-
-
-```sh
-❯ brun '(a (q 2 (q 2 (i 11 (q 2 (i (= 5 (point_add 11 (pubkey_for_exp (sha256 11 (a 6 (c 2 (c 23 ()))))))) (q 2 23 47) (q 8)) 1) (q 4 (c 4 (c 5 (c (a 6 (c 2 (c 23 ()))) ()))) (a 23 47))) 1) (c (q 50 2 (i (l 5) (q 11 (q . 2) (a 6 (c 2 (c 9 ()))) (a 6 (c 2 (c 13 ())))) (q 11 (q . 1) 5)) 1) 1)) (c (q . 0xb50b02adba343fff8bf3a94e92ed7df43743aedf0006b81a6c00ae573c0cce7d08216f60886fe84e4078a5209b0e5171) 1))' '(() (q (51 0x5abb5d5568b4a7411dd97b3356cfedfac09b5fb35621a7fa29ab9b59dc905fb6 0x0f4240) (51 0x4eb7420f8651b09124e1d40cdc49eeddacbaa0c25e6ae5a0a482fac8e3b5259f 0x0197741199c0)) ())'
-((50 0xb50b02adba343fff8bf3a94e92ed7df43743aedf0006b81a6c00ae573c0cce7d08216f60886fe84e4078a5209b0e5171 0x1ec848ca82cf27fd8bcb2b796de6e8448576ac117c2cb4f4ba6f9d6c9c8d7a55) (51 0x5abb5d5568b4a7411dd97b3356cfedfac09b5fb35621a7fa29ab9b59dc905fb6 0x0f4240) (51 0x4eb7420f8651b09124e1d40cdc49eeddacbaa0c25e6ae5a0a482fac8e3b5259f 0x0197741199c0))
-```
 
 # References
 
