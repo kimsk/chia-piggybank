@@ -310,13 +310,16 @@ Let's look at some scenarios that we can use the `p2_delegated_puzzle_or_hidden_
     - bob needs to **approve** the amount and recipient's address.
 
 1. [Multi-sig (m of m)](multi-sig-m-of-m.py)
+    - `DEFAULT_HIDDEN_PUZZLE_HASH`
     - alice, bob, and charlie wants to contribute 1 XCH each (total of 3 XCH) and give to dan.
     - everyone has to contribute or the spend won't happen. 
-
-1. [Saving Coin](scenario-1.py)
+    
+1. Saving Coin
     - alice and bob has a child named charlie.
     - alice and bob wants to save 2 XCH for charlie.
     - both alice and bob has to sign to spend the saving coin.
+    1. [Saving Coin (Custom Puzzle)](scenario-1.py)
+    1. [Saving Coin (Standard Transaction + Hidden Puzzle)](scenario-1-hidden-puzzle.py)
 
 1. Others
     - [spend_coin_sim.py](spend_coin_sim.py)
@@ -325,7 +328,9 @@ Let's look at some scenarios that we can use the `p2_delegated_puzzle_or_hidden_
     - [spend_coin_testnet10.py](spend_coin_testnet10.py)
     > send random coin on testnet10
 
-# References
+## Conclusions
+
+## References
 
 - [Aggregated Signatures, Taproot, Graftroot, and Standard Transactions](https://www.chia.net/2021/05/27/Agrgregated-Sigs-Taproot-Graftroot.html)- [2 - Coins, Spends and Wallets | Chialisp.com](https://chialisp.com/docs/coins_spends_and_wallets/)
 - [3 - Deeper into CLVM | Chialisp.com](https://chialisp.com/docs/deeper_into_clvm/)

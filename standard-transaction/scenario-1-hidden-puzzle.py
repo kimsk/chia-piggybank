@@ -52,13 +52,18 @@ saving_clsp = '''
     message=message,
     amt=amt)
 print(saving_clsp)
-
-saving_puzzle: Program = Program(
+saving_hidden_puzzle: Program = Program(
     compile_clvm_text(saving_clsp, search_paths=["../include"])
 )
-saving_puzzle_hash = saving_puzzle.get_tree_hash()
+saving_hidden_puzzle_hash = saving_hidden_puzzle.get_tree_hash()
 
-print(saving_puzzle_hash)
+print(saving_hidden_puzzle_hash)
+alice_bob_agg_pk = alice.pk_ + bob.pk_
+saving_puzzle = puzzle_for_public_key_and_hidden_puzzle_hash(
+    alice_bob_agg_pk,
+    saving_hidden_puzzle_hash
+)
+saving_puzzle_hash = saving_puzzle.get_tree_hash()
 
 alice_coin = get_coin(alice, xch)
 alice_spend, alice_sig_msg, alice_sig, alice_synthetic_pk = get_normal_coin_spend(
@@ -75,6 +80,7 @@ bob_spend, bob_sig_msg, bob_sig, bob_synthetic_pk = get_normal_coin_spend(
     [
         [ConditionOpcode.CREATE_COIN, bob.puzzle_hash, bob_coin.amount - xch],
     ])
+
 
 agg_sig = AugSchemeMPL.aggregate([
             alice_sig, 
@@ -108,14 +114,24 @@ print(f'bob balance: {bob.balance()}')
 print(f'charlie balance: {charlie.balance()}')
 
 # both now wants to send to charlie
+solution = Program.to(
+    [
+        alice_bob_agg_pk, # original public key
+        saving_hidden_puzzle, # hidden puzzle
+        [], # solution
+    ]
+)
+
+# test running
+result = saving_puzzle.run(solution)
+print(result)
 saving_spend = CoinSpend(
         saving_coin,
         saving_puzzle,
-        Program.to([])
+        solution
     )
 
 print(saving_spend)
-
 msg = (
         std_hash(message.encode())
         + saving_coin.name()
@@ -145,4 +161,5 @@ print(result)
 print(f'final charlie balance: {charlie.balance()}')
 
 end()
+
 utils.print_json(spend_bundle.to_json_dict(include_legacy_keys = False, exclude_modern_keys = False))
