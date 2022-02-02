@@ -174,6 +174,8 @@ run_program: 0.002062
 
 In this post we learn how we could improve our chialisp puzzle by utilizing DKG. The driver code also shows how we utilize a blockchain simulator which make the test easier.
 
+> [BLS has the property that the signatures of any number of (key, value) pairs can be expressed as a single aggregated signature. It isn’t possible given the aggregated signature to pull out any of the individual signatures.](https://www.chia.net/2021/05/27/Agrgregated-Sigs-Taproot-Graftroot.html)
+
 ## References
 - [Aggregated Signatures, Taproot, Graftroot, and Standard Transactions](https://www.chia.net/2021/05/27/Agrgregated-Sigs-Taproot-Graftroot.html)
 - [Difference between shamir secret sharing (SSS) vs Multisig vs aggregated signatures (BLS) vs distributed key generation (dkg) vs threshold signatures](https://www.cryptologie.net/article/486/difference-between-shamir-secret-sharing-sss-vs-multisig-vs-aggregated-signatures-bls-vs-distributed-key-generation-dkg-vs-threshold-signatures/)

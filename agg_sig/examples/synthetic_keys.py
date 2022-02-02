@@ -29,5 +29,9 @@ synthetic_sk: PrivateKey = calculate_synthetic_secret_key(sk1, DEFAULT_HIDDEN_PU
 print(f'synthetic_offset:\t{synthetic_offset}')
 print(f'synthetic_pk:\t\t{synthetic_pk}')
 
+print(f'sk1:\t\t\t{sk1}')
+print(f'synthetic_sk:\t\t{synthetic_sk}')
+
+
 sig: G2Element = AugSchemeMPL.sign(synthetic_sk, m1)
 assert AugSchemeMPL.verify(synthetic_pk, m1, sig)

@@ -9,6 +9,7 @@ This is my walkthrough of the [coin lifecycle and testing tutorials](https://chi
 - [Securing Piggybank Coin | AGG_SIG_ME](POST-7.md)
 - [Securing Piggybank Coin | ANNOUNCEMENT & coin id](POST-8.md)
 - [Aggregated Signature & Key](./agg_sig/AGG_SIG.md)
+- [The Standard Transaction](./standard-transaction/README.md)
 - TBA
 
 
