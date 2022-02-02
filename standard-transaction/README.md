@@ -295,7 +295,7 @@ There are two ways to spend the standard transaction:
 > p2_delegated_puzzle_or_hidden_puzzle is essentially the "standard coin" in chia. DEFAULT_HIDDEN_PUZZLE_HASH from this puzzle is used with
 calculate_synthetic_secret_key in the wallet's standard pk_to_sk finder. [*](https://github.com/Chia-Network/chia-blockchain/blob/main/chia/wallet/puzzles/p2_delegated_puzzle_or_hidden_puzzle.py#L18)
 
-The cool thing about the standard transaction is that we can control how the standard transaction coin is spent by providing our own delegated puzzle and solutions.
+The cool thing about the standard transaction is that we can control how the standard transaction coin is spent by providing our own delegated puzzle and solutions. Or we could also pre-commit the hidden puzzle and spend later as well.
 
 Let's look at some scenarios that we can use the `p2_delegated_puzzle_or_hidden_puzzle`.
 
@@ -329,6 +329,8 @@ Let's look at some scenarios that we can use the `p2_delegated_puzzle_or_hidden_
     > send random coin on testnet10
 
 ## Conclusions
+
+As you can see, the standard transaction puzzle is very flexible because we can provide `delegated puzzle` or `pre-committed puzzle` and `solution` that returns any `conditions`. It also introduces `synthetic keys` which better hide how the puzzle run.
 
 ## References
 
