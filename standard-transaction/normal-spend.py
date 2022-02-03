@@ -50,6 +50,9 @@ sig = AugSchemeMPL.sign(synthetic_sk,
     )
 )
 
+# (=)
+print(Program.from_bytes(bytes.fromhex("ff0980")).get_tree_hash())
+print(DEFAULT_HIDDEN_PUZZLE_HASH)
 alice_puzzle = puzzle_for_public_key_and_hidden_puzzle_hash(
     alice.pk(), DEFAULT_HIDDEN_PUZZLE_HASH
 )

@@ -280,9 +280,13 @@ There are two ways to spend the standard transaction:
 ...
 (if (=
         SYNTHETIC_PUBLIC_KEY
-        (point_add
+        (point_add ; synthentic_public_key == public_key + synthetic_offset_pubkey
             public_key
-            (pubkey_for_exp (sha256 public_key (sha256tree1 hidden_puzzle)))
+            (pubkey_for_exp ( ; derive public key offset from synthetic_offset 
+                    ; synthetic_offset == sha256(hidden_puzzle_hash + public_key)
+                    sha256 public_key (sha256tree1 hidden_puzzle)
+                )
+            )
         )
     )
     (a hidden_puzzle solution)
